@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 8306938296433648695}
   - component: {fileID: 4900924630537446581}
-  - component: {fileID: 593724680228302303}
   m_Layer: 0
   m_Name: MoveIndicator
   m_TagString: Untagged
@@ -85,19 +84,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!114 &593724680228302303
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6433649532048582825}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2e9191dc4d3a4dd4f8d85184b3ad50b2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  spriteRenderer: {fileID: 0}
 --- !u!1 &7332542248030645601
 GameObject:
   m_ObjectHideFlags: 0
