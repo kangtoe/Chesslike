@@ -16,6 +16,18 @@ public class BoardManager : MonoSingleton<BoardManager>
     [SerializeField] private Color darkCellColor = Color.gray;   // 어두운 셀 색상
     
     private BoardCell[,] boardCells; // 보드의 셀들을 저장하는 2차원 배열
+    private Vector2Int selectedCellPosition = new Vector2Int(-1, -1); // 선택된 셀의 위치 (-1, -1은 선택되지 않음을 의미)
+    public BoardCell SelectedCell 
+    { 
+        get 
+        {
+            if (boardCells == null || boardCells.Length == 0) return null;
+            if (selectedCellPosition.x < 0 || selectedCellPosition.y < 0) return null;
+            if (selectedCellPosition.x >= boardCells.GetLength(0) || selectedCellPosition.y >= boardCells.GetLength(1)) return null;
+
+            return boardCells[selectedCellPosition.x, selectedCellPosition.y];
+        }
+    }
     
     /// <summary>
     /// 보드의 중앙 위치를 반환합니다.
@@ -29,11 +41,15 @@ public class BoardManager : MonoSingleton<BoardManager>
             return new Vector3(centerX, centerY, 0);
         }
     }
-    
-    // Start is called before the first frame update
+            
     void Start()
     {
         CreateBoard();
+    }
+
+    private void Update()
+    {
+        CheckInput();
     }
     
     /// <summary>
@@ -61,10 +77,11 @@ public class BoardManager : MonoSingleton<BoardManager>
                 // 체스판 패턴으로 색상 설정 (x + y가 짝수면 밝은 색, 홀수면 어두운 색)
                 Color cellColor = ((x + y) % 2 == 0) ? lightCellColor : darkCellColor;
                 boardCell.SetColor(cellColor);
-                boardCell.ToggleMoveIndicator(false);
-                
+                boardCell.ToggleMoveIndicator(false);                
+
                 // 보드 배열에 저장
                 boardCells[x, y] = boardCell;
+                boardCell.CellCoordinate = new Vector2Int(x, y);
             }
         }
         
@@ -72,9 +89,82 @@ public class BoardManager : MonoSingleton<BoardManager>
         Debug.Log($"보드 중앙 위치: {BoardCenter}");
     }
 
-    // Update is called once per frame
-    void Update()
+    void CheckInput()
     {
+        if (Input.GetMouseButtonDown(0))
+        {            
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                BoardCell cell = hit.collider.GetComponent<BoardCell>();
+                if (cell)
+                {
+                    SelectCell(cell.CellCoordinate.x, cell.CellCoordinate.y);
+                    return;
+                }
+            }
+
+            ClearSelection();
+        }
+    }
+    
+    /// <summary>
+    /// 지정된 위치의 셀을 선택합니다.
+    /// </summary>
+    /// <param name="x">X 좌표</param>
+    /// <param name="y">Y 좌표</param>
+    /// <returns>선택 성공 여부</returns>
+    public bool SelectCell(int x, int y)
+    {
+        // 이전 선택 해제
+        ClearSelection();
         
+        // 새 셀 선택
+        selectedCellPosition = new Vector2Int(x, y);    
+        
+        Debug.Log($"셀이 선택되었습니다: ({x}, {y})");
+        return true;
+    }
+    
+    /// <summary>
+    /// 선택을 해제합니다.
+    /// </summary>
+    public void ClearSelection()
+    {
+        if (SelectedCell)
+        {
+            Debug.Log($"셀 선택 해제: {SelectedCell.CellCoordinate}");
+            selectedCellPosition = new Vector2Int(-1, -1);
+        }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        if (boardCells == null) return;
+        
+        Gizmos.color = Color.red;
+        
+        // 각 셀의 좌표를 표기
+        for (int x = 0; x < boardWidth; x++)
+        {
+            for (int y = 0; y < boardHeight; y++)
+            {
+                if (boardCells[x, y] != null)
+                {
+                    Vector3 cellPosition = boardCells[x, y].transform.position;
+                    string cellCoordinate = boardCells[x, y].CellCoordinate.ToString();
+                                        
+                    // 좌표값 텍스트 표기
+                    GUIStyle style = new GUIStyle();
+                    style.alignment = TextAnchor.MiddleCenter;
+                    style.fontSize = 18;
+                    style.normal.textColor = Color.magenta;
+                    
+                    #if UNITY_EDITOR
+                    UnityEditor.Handles.Label(cellPosition, cellCoordinate, style);
+                    #endif
+                }
+            }
+        }
     }
 }

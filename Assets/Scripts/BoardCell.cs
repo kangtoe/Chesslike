@@ -5,6 +5,8 @@ using UnityEngine;
 [RequireComponent(typeof(Renderer))]
 public class BoardCell : MonoBehaviour
 {
+    public Vector2Int CellCoordinate  { get; set; }
+
     [SerializeField] GameObject moveIndicator;
 
     private Renderer cellRenderer;
@@ -26,5 +28,5 @@ public class BoardCell : MonoBehaviour
     public void ToggleMoveIndicator(bool isActive)
     {
         if(moveIndicator) moveIndicator.SetActive(isActive);
-    }
+    }    
 }
