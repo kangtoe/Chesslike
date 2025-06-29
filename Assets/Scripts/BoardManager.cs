@@ -7,6 +7,15 @@ public class BoardManager : MonoSingleton<BoardManager>
     [Header("보드 설정")]
     [SerializeField] private int boardWidth = 8;  // 보드 가로 크기
     [SerializeField] private int boardHeight = 8; // 보드 세로 크기
+    public Vector3 BoardCenter
+    {
+        get
+        {
+            float centerX = (boardWidth - 1) * 0.5f;
+            float centerY = (boardHeight - 1) * 0.5f;
+            return new Vector3(centerX, centerY, 0);
+        }
+    }
     
     [Header("셀 프리팹")]
     [SerializeField] private GameObject boardCellPrefab; // BoardCell 프리팹
@@ -15,6 +24,7 @@ public class BoardManager : MonoSingleton<BoardManager>
     [SerializeField] private Color lightCellColor = Color.white; // 밝은 셀 색상
     [SerializeField] private Color darkCellColor = Color.gray;   // 어두운 셀 색상
     
+    [Header("보드 셀")]
     private BoardCell[,] boardCells; // 보드의 셀들을 저장하는 2차원 배열
     private Vector2Int selectedCellPosition = new Vector2Int(-1, -1); // 선택된 셀의 위치 (-1, -1은 선택되지 않음을 의미)
     public BoardCell SelectedCell 
@@ -26,19 +36,6 @@ public class BoardManager : MonoSingleton<BoardManager>
             if (selectedCellPosition.x >= boardCells.GetLength(0) || selectedCellPosition.y >= boardCells.GetLength(1)) return null;
 
             return boardCells[selectedCellPosition.x, selectedCellPosition.y];
-        }
-    }
-    
-    /// <summary>
-    /// 보드의 중앙 위치를 반환합니다.
-    /// </summary>
-    public Vector3 BoardCenter
-    {
-        get
-        {
-            float centerX = (boardWidth - 1) * 0.5f;
-            float centerY = (boardHeight - 1) * 0.5f;
-            return new Vector3(centerX, centerY, 0);
         }
     }
             
