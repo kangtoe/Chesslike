@@ -5,6 +5,7 @@ using UnityEngine;
 public class BoardManager : MonoSingleton<BoardManager>
 {
     [Header("보드 설정")]
+    [SerializeField] GameObject boardRoot;
     [SerializeField] private int boardWidth = 8;  // 보드 가로 크기
     [SerializeField] private int boardHeight = 8; // 보드 세로 크기
     public Vector3 BoardCenter
@@ -65,7 +66,7 @@ public class BoardManager : MonoSingleton<BoardManager>
                 
                 // BoardCell 프리팹을 스폰
                 GameObject cellObject = Instantiate(boardCellPrefab, cellPosition, Quaternion.identity);
-                cellObject.transform.SetParent(transform);
+                cellObject.transform.SetParent(boardRoot.transform);
                 cellObject.name = $"Cell_{x}_{y}";
                 
                 // BoardCell 컴포넌트 가져오기
