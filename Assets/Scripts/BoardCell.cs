@@ -7,6 +7,9 @@ public class BoardCell : MonoBehaviour
 {
     public Vector2Int CellCoordinate  { get; set; }
 
+    [SerializeField] Transform _pieceDeployPoint;
+    public Vector3 PieceDeployPoint => _pieceDeployPoint.position;
+
     [SerializeField] GameObject moveIndicator;
 
     private Renderer cellRenderer;

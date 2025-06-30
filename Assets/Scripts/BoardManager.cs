@@ -44,11 +44,6 @@ public class BoardManager : MonoSingleton<BoardManager>
     {
         CreateBoard();
     }
-
-    private void Update()
-    {
-        CheckInput();
-    }
     
     /// <summary>
     /// N * M 개의 셀로 구성된 보드를 생성합니다.
@@ -87,53 +82,127 @@ public class BoardManager : MonoSingleton<BoardManager>
         Debug.Log($"보드 중앙 위치: {BoardCenter}");
     }
 
-    void CheckInput()
+    public bool IsValidCellCoordinate(Vector2Int cellCoordinate)
     {
-        if (Input.GetMouseButtonDown(0))
-        {            
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out RaycastHit hit))
+        return cellCoordinate.x >= 0 && cellCoordinate.x < boardWidth && cellCoordinate.y >= 0 && cellCoordinate.y < boardHeight;
+    }
+
+    public BoardCell GetCell(Vector2Int cellCoordinate)
+    {
+        if(!IsValidCellCoordinate(cellCoordinate))
+        {
+            Debug.LogError($"Invalid cell coordinate: {cellCoordinate}");
+            return null;
+        }
+
+        return boardCells[cellCoordinate.x, cellCoordinate.y];
+    }
+
+    public void ActiveMoveIndicator(List<Vector2Int> cells)
+    {
+        foreach(var cell in boardCells)
+        {
+            cell.ToggleMoveIndicator(false);
+        }
+
+        if(cells == null) return;
+        foreach(var cell in cells)
+        {
+            boardCells[cell.x, cell.y].ToggleMoveIndicator(true);
+        }
+    }
+
+    /// <summary>
+    /// 특정 피스가 이동 가능한 모든 셀 좌표를 반환합니다.
+    /// </summary>
+    public List<Vector2Int> GetMovableCells(DeployedPiece piece)
+    {
+        HashSet<Vector2Int> movableCells = new HashSet<Vector2Int>();
+        if (piece == null) return new List<Vector2Int>(movableCells);
+
+        Vector2Int start = piece.CellCoordinate;
+        PieceMovement move = piece.PieceInfo.movement;
+
+        // 상, 하, 좌, 우 4방향
+        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        foreach (var dir in directions)
+        {
+            for (int dist = 1; dist <= move.row; dist++)
             {
-                BoardCell cell = hit.collider.GetComponent<BoardCell>();
-                if (cell)
+                Vector2Int next = start + dir * dist;
+                if (!IsValidCellCoordinate(next)) break;
+                if (PieceManager.Instance.TryGetPieceAt(next, out _))
+                    break; // 막히면 그 뒤로는 못 감
+                movableCells.Add(next);
+            }
+        }
+
+        // 2. 대각선 이동 (diag)
+        Vector2Int[] diagDirs = { new Vector2Int(1, 1), new Vector2Int(-1, 1), new Vector2Int(1, -1), new Vector2Int(-1, -1) };
+        foreach (var dir in diagDirs)
+        {
+            for (int dist = 1; dist <= move.diag; dist++)
+            {
+                Vector2Int next = start + dir * dist;
+                if (!IsValidCellCoordinate(next)) break;
+                if (PieceManager.Instance.TryGetPieceAt(next, out _))
+                    break; // 막히면 그 뒤로는 못 감
+                movableCells.Add(next);
+            }
+        }
+
+        // 3. 나이트 이동
+        if (move.isKnight)
+        {
+            Vector2Int[] knightMoves = {
+                new Vector2Int(1,2), new Vector2Int(2,1), new Vector2Int(-1,2), new Vector2Int(-2,1),
+                new Vector2Int(1,-2), new Vector2Int(2,-1), new Vector2Int(-1,-2), new Vector2Int(-2,-1)
+            };
+            foreach (var km in knightMoves)
+            {
+                Vector2Int next = start + km;
+                if (!IsValidCellCoordinate(next)) continue;
+                if (PieceManager.Instance.TryGetPieceAt(next, out _))
+                    continue;
+                movableCells.Add(next);
+            }
+        }
+
+        // 4. 폰 이동
+        if (move.isPawn)
+        {
+            int forward = piece.PieceColor == PieceColor.White ? 1 : -1;
+
+            // 1. 앞으로 한 칸
+            Vector2Int forwardPos = start + new Vector2Int(0, forward);
+            if (IsValidCellCoordinate(forwardPos) && !PieceManager.Instance.TryGetPieceAt(forwardPos, out _))
+            {
+                movableCells.Add(forwardPos);
+
+                // 2. 처음 이동 시 두 칸
+                bool isFirstMove = piece.MoveCount == 0;
+                Vector2Int doubleForwardPos = start + new Vector2Int(0, 2 * forward);
+                if (isFirstMove && IsValidCellCoordinate(doubleForwardPos) && !PieceManager.Instance.TryGetPieceAt(doubleForwardPos, out _))
                 {
-                    SelectCell(cell.CellCoordinate.x, cell.CellCoordinate.y);
-                    return;
+                    movableCells.Add(doubleForwardPos);
                 }
             }
 
-            ClearSelection();
+            // 3. 대각선 공격
+            Vector2Int[] attackDirs = { new Vector2Int(-1, forward), new Vector2Int(1, forward) };
+            foreach (var dir in attackDirs)
+            {
+                Vector2Int attackPos = start + dir;
+                if (IsValidCellCoordinate(attackPos) && PieceManager.Instance.TryGetPieceAt(attackPos, out DeployedPiece target))
+                {
+                    // 상대 기물인지 체크
+                    if(piece.PieceColor == target.PieceColor) continue;
+                    movableCells.Add(attackPos);
+                }
+            }
         }
-    }
-    
-    /// <summary>
-    /// 지정된 위치의 셀을 선택합니다.
-    /// </summary>
-    /// <param name="x">X 좌표</param>
-    /// <param name="y">Y 좌표</param>
-    /// <returns>선택 성공 여부</returns>
-    public bool SelectCell(int x, int y)
-    {
-        // 이전 선택 해제
-        ClearSelection();
-        
-        // 새 셀 선택
-        selectedCellPosition = new Vector2Int(x, y);    
-        
-        Debug.Log($"셀이 선택되었습니다: ({x}, {y})");
-        return true;
-    }
-    
-    /// <summary>
-    /// 선택을 해제합니다.
-    /// </summary>
-    public void ClearSelection()
-    {
-        if (SelectedCell)
-        {
-            Debug.Log($"셀 선택 해제: {SelectedCell.CellCoordinate}");
-            selectedCellPosition = new Vector2Int(-1, -1);
-        }
+
+        return new List<Vector2Int>(movableCells);
     }
 
     void OnDrawGizmosSelected()
