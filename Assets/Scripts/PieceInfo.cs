@@ -11,9 +11,8 @@ public enum PieceColor
 [System.Serializable]
 public struct PieceMovement
 {
-    public int row;
-    public int col;
-    public int diag;
+    public int rookMove;    
+    public int bishopMove;
     public bool isKnight;
     public bool isPawn;
 }
