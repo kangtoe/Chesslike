@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95bb09932f680bc4c9ba6e3ab4238f75, type: 3}
+  m_Name: Pawn
+  m_EditorClassIdentifier: 
+  pieceName: Pawn
+  pieceAlphabet: 82
+  blackSprite: {fileID: 21300000, guid: a38552722ec17a546ba9251187ceef9e, type: 3}
+  whiteSprite: {fileID: 21300000, guid: e05937708abf31f43b5023bb2fbd3f5b, type: 3}
+  value: 5
+  health: 1
+  attack: 1
+  defense: 1
+  movement:
+    rookMove: 0
+    bishopMove: 0
+    isKnight: 0
+    isPawn: 1
