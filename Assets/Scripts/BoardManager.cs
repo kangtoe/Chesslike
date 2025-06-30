@@ -67,8 +67,8 @@ public class BoardManager : MonoSingleton<BoardManager>
                 // BoardCell 컴포넌트 가져오기
                 BoardCell boardCell = cellObject.GetComponent<BoardCell>();
                 
-                // 체스판 패턴으로 색상 설정 (x + y가 짝수면 밝은 색, 홀수면 어두운 색)
-                Color cellColor = ((x + y) % 2 == 0) ? lightCellColor : darkCellColor;
+                // 체스판 패턴으로 색상 설정 (x + y가 짝수면 어두운 색, 홀수면 밝은 색)
+                Color cellColor = ((x + y) % 2 == 0) ? darkCellColor : lightCellColor;
                 boardCell.SetColor(cellColor);
                 boardCell.ToggleMoveIndicator(false);                
 
@@ -127,7 +127,7 @@ public class BoardManager : MonoSingleton<BoardManager>
         Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
         foreach (var dir in directions)
         {
-            for (int dist = 1; dist <= move.row; dist++)
+            for (int dist = 1; dist <= move.rookMove; dist++)
             {
                 Vector2Int next = start + dir * dist;
                 if (!IsValidCellCoordinate(next)) break;
@@ -141,7 +141,7 @@ public class BoardManager : MonoSingleton<BoardManager>
         Vector2Int[] diagDirs = { new Vector2Int(1, 1), new Vector2Int(-1, 1), new Vector2Int(1, -1), new Vector2Int(-1, -1) };
         foreach (var dir in diagDirs)
         {
-            for (int dist = 1; dist <= move.diag; dist++)
+            for (int dist = 1; dist <= move.bishopMove; dist++)
             {
                 Vector2Int next = start + dir * dist;
                 if (!IsValidCellCoordinate(next)) break;
