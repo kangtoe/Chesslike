@@ -2,6 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum PieceColor
+{
+    Black = -1,
+    White = 1
+}
+
 [System.Serializable]
 public struct PieceMovement
 {
@@ -18,7 +24,8 @@ public class PieceInfo : ScriptableObject
     [NaughtyAttributes.ReadOnly]
     public string pieceName;
     public char pieceAlphabet;
-    public Sprite sprite;
+    public Sprite blackSprite;
+    public Sprite whiteSprite;
 
     [Header("Stats")]
     public int value;

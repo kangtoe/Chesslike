@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pieceName: Rook
   pieceAlphabet: 82
-  sprite: {fileID: 21300000, guid: db3438b279636a541899fb325b99bd43, type: 3}
+  blackSprite: {fileID: 21300000, guid: f943453e25abba544b1362827633bea0, type: 3}
+  whiteSprite: {fileID: 21300000, guid: db3438b279636a541899fb325b99bd43, type: 3}
   value: 5
   health: 1
   attack: 1
@@ -22,6 +23,6 @@ MonoBehaviour:
   movement:
     row: 0
     col: 0
-    diag: 99
+    diag: 0
     isKnight: 0
-    isPawn: 0
+    isPawn: 1
