@@ -270,7 +270,6 @@ Transform:
   - {fileID: 1066602171}
   - {fileID: 31422596}
   - {fileID: 837474731}
-  - {fileID: 1365956931}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &492748698
@@ -285,8 +284,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fd063d9c135336459a6e4e0164b79f0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _pieceInfo: {fileID: 0}
-  _coordinate: {x: 0, y: 0}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -567,6 +564,7 @@ MonoBehaviour:
   _pieceRoot: {fileID: 482418240}
   _piecePrefab: {fileID: 3505767893514044319, guid: a67120c4740e80c4192e8ea7a6e327f4, type: 3}
   _pieceInfo: {fileID: 11400000, guid: fd43390b087c8a8428534b16e59654d7, type: 2}
+  _pieceColor: 1
   _coordinate: {x: 0, y: 0}
 --- !u!1 &1190722282
 GameObject:
@@ -599,52 +597,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 2060367780}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1365956930
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1365956931}
-  - component: {fileID: 1365956932}
-  m_Layer: 0
-  m_Name: DebugManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1365956931
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1365956930}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 492748697}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1365956932
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1365956930}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5fd063d9c135336459a6e4e0164b79f0, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _pieceInfo: {fileID: 11400000, guid: fd43390b087c8a8428534b16e59654d7, type: 2}
-  _coordinate: {x: 1, y: 1}
 --- !u!1 &2060367779
 GameObject:
   m_ObjectHideFlags: 0
