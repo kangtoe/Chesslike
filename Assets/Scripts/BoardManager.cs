@@ -8,6 +8,8 @@ public class BoardManager : MonoSingleton<BoardManager>
     [SerializeField] GameObject boardRoot;
     [SerializeField] private int boardWidth = 8;  // 보드 가로 크기
     [SerializeField] private int boardHeight = 8; // 보드 세로 크기
+    public int BoardWidth => boardWidth;
+    public int BoardHeight => boardHeight;
     public Vector3 BoardCenter
     {
         get
