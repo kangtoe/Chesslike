@@ -9,6 +9,10 @@ public class PieceManager : MonoSingleton<PieceManager>
     [Header("피스 프리팹")]
     [SerializeField] DeployedPiece _piecePrefab;
 
+    [NaughtyAttributes.ReadOnly]
+    [SerializeField] DeployedPiece _selectedPiece;
+    public DeployedPiece SelectedPiece => _selectedPiece;
+
     // 키: 셀 좌표, 값: 배치된 피스
     Dictionary<Vector2Int, DeployedPiece> deployedPieces = new Dictionary<Vector2Int, DeployedPiece>();
 
@@ -27,17 +31,22 @@ public class PieceManager : MonoSingleton<PieceManager>
         return deployedPieces.TryGetValue(cellCoordinate, out piece);
     }
 
-    #region 피스 선택
+    #region 피스 제어
     public void SelectPiece(DeployedPiece piece)
     {
         if(piece == null) return;
         List<Vector2Int> movableCells = BoardManager.Instance.GetMovableCells(piece);
         Debug.Log($"이동 가능한 셀: {string.Join(", ", movableCells)}");
         BoardManager.Instance.ActiveMoveIndicator(movableCells);
-    }
-    #endregion 피스 선택
+        _selectedPiece = piece;
+    }    
 
-    #region 피스 제어
+    public void DeselectPiece()
+    {
+        BoardManager.Instance.ActiveMoveIndicator(null);
+        _selectedPiece = null;
+    }
+
     public bool DeployPiece(PieceInfo pieceInfo, Vector2Int cellCoordinate, PieceColor pieceColor)
     {
         if(!IsValidCellCoordinate(cellCoordinate)) return false;
@@ -61,7 +70,25 @@ public class PieceManager : MonoSingleton<PieceManager>
         return true;
     }
 
-    public bool MovePiece(Vector2Int fromCoordinate, Vector2Int toCoordinate)
+    public bool MovePiece(Vector2Int toCoordinate)
+    {
+        if(_selectedPiece == null)
+        {
+            Debug.LogError("No piece selected");
+            return false;
+        }
+
+        List<Vector2Int> movableCells = BoardManager.Instance.GetMovableCells(_selectedPiece);
+        if(!movableCells.Contains(toCoordinate))
+        {
+            Debug.LogWarning($"Invalid cell coordinate: {toCoordinate}");
+            return false;
+        }
+
+        return MovePiece(_selectedPiece.CellCoordinate, toCoordinate);
+    }
+
+    bool MovePiece(Vector2Int fromCoordinate, Vector2Int toCoordinate)
     {
         if(!IsValidCellCoordinate(toCoordinate)) return false;
 
@@ -85,6 +112,8 @@ public class PieceManager : MonoSingleton<PieceManager>
         // 딕셔너리 업데이트
         deployedPieces.Remove(fromCoordinate);
         deployedPieces[toCoordinate] = piece;
+
+        DeselectPiece();
 
         Debug.Log($"피스가 {fromCoordinate}에서 {toCoordinate}로 이동했습니다.");
         return true;
