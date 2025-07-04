@@ -40,27 +40,5 @@ public class DeployedPiece : MonoBehaviour
     {
         _cellCoordinate = cellCoordinate;
     }
-
-#region 마우스 이벤트
-    // 마우스 클릭 감지
-    void OnMouseDown()
-    {
-        Debug.Log($"Piece clicked: {_pieceInfo.name} at position {_cellCoordinate}");
-        PieceManager.Instance.SelectPiece(this);
-    }
-
-    // 마우스 오버 감지 (선택사항)
-    void OnMouseEnter()
-    {
-        // 마우스가 올라왔을 때의 효과 (예: 스케일 변경)
-        transform.localScale = Vector3.one * 1.1f;
-    }
-
-    // 마우스 아웃 감지 (선택사항)
-    void OnMouseExit()
-    {
-        // 마우스가 벗어났을 때 원래 크기로 복원
-        transform.localScale = Vector3.one;
-    }
-#endregion 마우스 이벤트
+    
 }
