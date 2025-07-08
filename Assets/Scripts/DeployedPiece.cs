@@ -6,6 +6,7 @@ using UnityEngine;
 public class DeployedPiece : MonoBehaviour
 {
     [SerializeField] SpriteRenderer _spriteRenderer;
+    [SerializeField] PieceUI _pieceUI;
 
     [NaughtyAttributes.ReadOnly]
     [SerializeField] PieceInfo _pieceInfo;
@@ -27,6 +28,7 @@ public class DeployedPiece : MonoBehaviour
     void Start()
     {
         _spriteRenderer = GetComponent<SpriteRenderer>();        
+        UpdateUI();
     }
 
     public void InitPiece(PieceInfo pieceInfo, PieceColor pieceColor)
@@ -41,4 +43,11 @@ public class DeployedPiece : MonoBehaviour
         _cellCoordinate = cellCoordinate;
     }
     
+    void UpdateUI()
+    {
+        Debug.Log("UpdateUI");
+
+        _pieceUI?.SetHealth(_pieceInfo.health, _pieceInfo.health);
+        _pieceUI?.SetDamage(_pieceInfo.attack);
+    }
 }
