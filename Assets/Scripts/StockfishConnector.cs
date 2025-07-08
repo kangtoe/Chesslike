@@ -3,7 +3,7 @@ using System.IO;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-public class StockfishConnector : MonoBehaviour
+public class StockfishConnector : MonoSingleton<StockfishConnector>
 {
     private Process stockfishProcess;
     private StreamWriter stockfishInput;
