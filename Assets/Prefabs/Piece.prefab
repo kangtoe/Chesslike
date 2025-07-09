@@ -208,8 +208,8 @@ GameObject:
   - component: {fileID: 760380658743428807}
   - component: {fileID: 3505767893514044319}
   - component: {fileID: 8336315765730713079}
-  - component: {fileID: 955364343110308637}
   - component: {fileID: 3349978820796741970}
+  - component: {fileID: 7282966327128545151}
   m_Layer: 0
   m_Name: Piece
   m_TagString: Untagged
@@ -274,7 +274,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: a4656c36d087fcc4ca89d831a1e45f38, type: 3}
+  m_Sprite: {fileID: 21300000, guid: a36d010d2c54b8040a84de67263f7307, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -316,8 +316,22 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startOnly: 0
---- !u!65 &955364343110308637
-BoxCollider:
+--- !u!114 &3349978820796741970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5820285988527256282}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a1fca7875db643478168f9a29b17ea5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  damageText: {fileID: 5855819889283211745}
+  healthText: {fileID: 3877387884670339863}
+--- !u!136 &7282966327128545151
+CapsuleCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -334,23 +348,11 @@ BoxCollider:
   m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
-  serializedVersion: 3
-  m_Size: {x: 1.5238096, y: 1.5238096, z: 0.2}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &3349978820796741970
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5820285988527256282}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1a1fca7875db643478168f9a29b17ea5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  damageText: {fileID: 5855819889283211745}
-  healthText: {fileID: 3877387884670339863}
+  serializedVersion: 2
+  m_Radius: 0.23
+  m_Height: 0.75
+  m_Direction: 1
+  m_Center: {x: 0, y: 0.41, z: 0}
 --- !u!1 &6294914083686317421
 GameObject:
   m_ObjectHideFlags: 0
