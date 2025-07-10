@@ -207,7 +207,7 @@ public class BoardManager : MonoSingleton<BoardManager>
         return new List<Vector2Int>(movableCells);
     }
 
-    void OnDrawGizmosSelected()
+    void OnDrawGizmos()
     {
         if (boardCells == null) return;
         
@@ -222,15 +222,25 @@ public class BoardManager : MonoSingleton<BoardManager>
                 {
                     Vector3 cellPosition = boardCells[x, y].transform.position;
                     string cellCoordinate = boardCells[x, y].CellCoordinate.ToString();
-                                        
-                    // 좌표값 텍스트 표기
+                    
+                    // 체스 표기법으로 변환 (좌측 하단이 a1)
+                    char file = (char)('a' + x);  // a, b, c, d, e, f, g, h
+                    int rank = y + 1;             // 1, 2, 3, 4, 5, 6, 7, 8
+                    string chessNotation = $"{file}{rank}";
+                    
+                    // 좌표값 텍스트 표기 (Unity 좌표 + 체스 표기법)
                     GUIStyle style = new GUIStyle();
                     style.alignment = TextAnchor.MiddleCenter;
                     style.fontSize = 18;
                     style.normal.textColor = Color.magenta;
                     
                     #if UNITY_EDITOR
-                    UnityEditor.Handles.Label(cellPosition, cellCoordinate, style);
+                    // Unity 좌표계 표시
+                    UnityEditor.Handles.Label(cellPosition + Vector3.up * 0.3f, cellCoordinate, style);
+                    
+                    // 체스 표기법 표시
+                    style.normal.textColor = Color.cyan;
+                    UnityEditor.Handles.Label(cellPosition + Vector3.down * 0.3f, chessNotation, style);
                     #endif
                 }
             }
