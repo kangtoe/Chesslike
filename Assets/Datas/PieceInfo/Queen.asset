@@ -10,19 +10,19 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 95bb09932f680bc4c9ba6e3ab4238f75, type: 3}
-  m_Name: Rook
+  m_Name: Queen
   m_EditorClassIdentifier: 
-  pieceName: Rook
-  pieceAlphabet: 82
-  blackSprite: {fileID: 21300000, guid: dd76580c468ac6246b8e4316be8c4e8c, type: 3}
-  whiteSprite: {fileID: 21300000, guid: 508a3945e99874a4fa9f5947bfb1ae2f, type: 3}
-  value: 5
+  pieceName: Queen
+  pieceAlphabet: 81
+  blackSprite: {fileID: 21300000, guid: ac21ed0bed531aa428845bc37b49d3ca, type: 3}
+  whiteSprite: {fileID: 21300000, guid: b77f938534319f448b47e8623852d5c8, type: 3}
+  value: 9
   health: 1
   attack: 1
   defense: 1
   movement:
     rookMove: 8
-    bishopMove: 0
+    bishopMove: 8
     isKnight: 0
     isPawn: 0
  
