@@ -47,7 +47,7 @@ public class AIManager : MonoSingleton<AIManager>
         }
         
         stockfishConnector.StartStockfish();
-        customPieceManager.RegisterCustomPieces(stockfishConnector);
+        // customPieceManager.RegisterCustomPieces(stockfishConnector);
 
         Debug.Log("=== AI 시스템 초기화 완료 ===");
     }
@@ -55,7 +55,7 @@ public class AIManager : MonoSingleton<AIManager>
     /// <summary>
     /// FEN 문자열을 기반으로 최적의 이동을 계산합니다.
     /// </summary>
-    public string GetBestMove(string fen, PieceColor color = PieceColor.Black, int depth = -1)
+    public string GetBestMove(string fen, PieceColor color = PieceColor.Black)
     {
         if (stockfishConnector == null)
         {
@@ -63,6 +63,6 @@ public class AIManager : MonoSingleton<AIManager>
             return null;
         }
 
-        return stockfishConnector.GetBestMoveFromFEN(fen, depth, color);
+        return stockfishConnector.GetBestMoveFromFEN(fen, defaultSearchDepth, color);
     }
 } 

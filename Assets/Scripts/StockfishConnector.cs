@@ -12,19 +12,21 @@ public class StockfishConnector : MonoBehaviour
     #region stockfish utility
 
     public void StartStockfish()
-    {        
-        string exePath = Path.Combine(Application.streamingAssetsPath, "fairy-stockfish_x86-64.exe");
+    {
+        string exePath = Path.Combine(Application.streamingAssetsPath, "fairy-stockfish.exe");
 
         stockfishProcess = new Process();
         stockfishProcess.StartInfo.FileName = exePath;
+        stockfishProcess.StartInfo.Arguments = "load variants.ini";
         stockfishProcess.StartInfo.UseShellExecute = false;
         stockfishProcess.StartInfo.RedirectStandardInput = true;
         stockfishProcess.StartInfo.RedirectStandardOutput = true;
         stockfishProcess.StartInfo.CreateNoWindow = true;
+        stockfishProcess.StartInfo.WorkingDirectory = Application.streamingAssetsPath;
         stockfishProcess.Start();
 
         stockfishInput = stockfishProcess.StandardInput;
-        stockfishOutput = stockfishProcess.StandardOutput;        
+        stockfishOutput = stockfishProcess.StandardOutput;
 
         SendCommand("uci");
         SendCommand("isready");
@@ -72,6 +74,7 @@ public class StockfishConnector : MonoBehaviour
         string colorStr = (color == PieceColor.White) ? "w" : "b";
         fen += " " + colorStr + " - - 0 1";
 
+        SendCommand("setoption name UCI_Variant value chesslike");
         SendCommand("position fen " + fen);
         SendCommand("go depth " + depth);
 
