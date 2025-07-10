@@ -15,6 +15,7 @@ public class PieceManager : MonoSingleton<PieceManager>
 
     // 키: 셀 좌표, 값: 배치된 피스
     Dictionary<Vector2Int, DeployedPiece> deployedPieces = new Dictionary<Vector2Int, DeployedPiece>();
+    public Dictionary<Vector2Int, DeployedPiece> DeployedPieces => deployedPieces;
 
     bool IsValidCellCoordinate(Vector2Int cellCoordinate)
     {
@@ -49,6 +50,12 @@ public class PieceManager : MonoSingleton<PieceManager>
 
     public bool DeployPiece(PieceInfo pieceInfo, Vector2Int cellCoordinate, PieceColor pieceColor)
     {
+        if(pieceInfo == null)
+        {
+            Debug.LogWarning("PieceInfo is null");
+            return false;
+        }
+
         if(!IsValidCellCoordinate(cellCoordinate)) return false;
         
         if(deployedPieces.ContainsKey(cellCoordinate))
@@ -135,54 +142,6 @@ public class PieceManager : MonoSingleton<PieceManager>
         return true;
     }
     #endregion 피스 제어
-
-    #region 디버그
-    [Header("디버그")]
-    [SerializeField] PieceInfo _pieceInfo;
-    [SerializeField] PieceColor _pieceColor = PieceColor.White;
-    [SerializeField] Vector2Int _coordinate;
-    
-    [NaughtyAttributes.Button]
-    void DeployPiece_Debug()
-    {        
-        DeployPiece(_pieceInfo, _coordinate, _pieceColor);
-    }
-
-    [NaughtyAttributes.Button]
-    public void PrintBoardState()
-    {
-        Debug.Log("=== 보드 상태 ===");
-        if(deployedPieces.Count == 0)
-        {
-            Debug.Log("배치된 피스가 없습니다.");
-            return;
-        }
-
-        foreach(var kvp in deployedPieces)
-        {
-            Vector2Int coordinate = kvp.Key;
-            DeployedPiece piece = kvp.Value;
-            Debug.Log($"좌표 {coordinate}: {piece.name}");
-        }
-        Debug.Log("================");
-
-        Debug.Log($"FEN: {GetFENFromCurrentBoard()}");
-    }
-
-    [NaughtyAttributes.Button]
-    void ClearAllPieces()
-    {
-        // 딕셔너리의 키들을 리스트로 변환하여 역순으로 처리
-        List<Vector2Int> coordinates = new List<Vector2Int>(deployedPieces.Keys);
-        for(int i = coordinates.Count - 1; i >= 0; i--)
-        {
-            RemovePiece(coordinates[i]);
-        }
-        Debug.Log("모든 피스가 제거되었습니다.");
-
-        BoardManager.Instance.ActiveMoveIndicator(null);
-    }
-    #endregion 디버그
 
     #region FEN 변환
     /// <summary>
