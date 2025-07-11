@@ -65,7 +65,7 @@ public class PieceDebugger : MonoBehaviour
         // }
         // Debug.Log("================");
 
-        fen = PieceManager.Instance.GetFENFromCurrentBoard();
+        fen = ChessNotationUtil.GenerateFEN();
         //Debug.Log($"FEN: {fen}");
     }
     
@@ -79,7 +79,7 @@ public class PieceDebugger : MonoBehaviour
 
         // Debug.Log("=== 최적 이동 ===");
 
-        string piecePlacement = PieceManager.Instance.GetFENFromCurrentBoard();
+        string piecePlacement = ChessNotationUtil.GenerateFEN();
         white_bestMove = AIManager.Instance.GetBestMove(piecePlacement, PieceColor.White);
         black_bestMove = AIManager.Instance.GetBestMove(piecePlacement, PieceColor.Black);
         //Debug.Log("White Best move: " + white_bestMove);

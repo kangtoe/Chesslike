@@ -163,44 +163,5 @@ public class PieceManager : MonoSingleton<PieceManager>
     }
     #endregion 피스 제어
 
-    #region FEN 변환
-    /// <summary>
-    /// 현재 배치된 피스들로부터 FEN 문자열을 반환합니다.
-    /// </summary>
-    public string GetFENFromCurrentBoard()
-    {
-        int width = BoardManager.Instance.BoardWidth;
-        int height = BoardManager.Instance.BoardHeight;
-        System.Text.StringBuilder fen = new System.Text.StringBuilder();
 
-        for (int y = height - 1; y >= 0; y--) // FEN은 8(위)~1(아래) 순서
-        {
-            int emptyCount = 0;
-            for (int x = 0; x < width; x++)
-            {
-                Vector2Int coord = new Vector2Int(x, y);
-                if (deployedPieces.TryGetValue(coord, out DeployedPiece piece))
-                {
-                    if (emptyCount > 0)
-                    {
-                        fen.Append(emptyCount);
-                        emptyCount = 0;
-                    }
-                    char symbol = piece.PieceInfo.pieceAlphabet;
-                    // 백: 대문자, 흑: 소문자
-                    fen.Append(piece.PieceColor == PieceColor.White ? char.ToUpper(symbol) : char.ToLower(symbol));
-                }
-                else
-                {
-                    emptyCount++;
-                }
-            }
-            if (emptyCount > 0)
-                fen.Append(emptyCount);
-            if (y > 0)
-                fen.Append('/');
-        }
-        return fen.ToString();
-    }
-    #endregion FEN 변환
 }
