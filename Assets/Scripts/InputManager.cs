@@ -9,6 +9,9 @@ public class InputManager : MonoSingleton<InputManager>
 
     void Update()
     {
+        // 이동 애니메이션 중이면 입력 무시
+        if(PieceManager.Instance.IsMoving) return;
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 

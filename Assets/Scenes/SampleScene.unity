@@ -616,6 +616,12 @@ MonoBehaviour:
   _pieceRoot: {fileID: 482418240}
   _piecePrefab: {fileID: 3505767893514044319, guid: a67120c4740e80c4192e8ea7a6e327f4, type: 3}
   _selectedPiece: {fileID: 0}
+  moveSpeed: 8
+  liftHeight: 1
+  pauseTime: 0.15
+  minMoveTime: 0.3
+  dropTime: 0.1
+  _isMoving: 0
 --- !u!114 &1066602173
 MonoBehaviour:
   m_ObjectHideFlags: 0
