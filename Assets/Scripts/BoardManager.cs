@@ -100,27 +100,45 @@ public class BoardManager : MonoSingleton<BoardManager>
         return boardCells[cellCoordinate.x, cellCoordinate.y];
     }
 
-    public void ActiveMoveIndicator(List<Vector2Int> cells)
+    public void ActiveCellIndicator(List<Vector2Int> movableCells, List<Vector2Int> attackCells = null)
     {
         foreach(var cell in boardCells)
         {
             cell.ToggleMoveIndicator(false);
         }
 
-        if(cells == null) return;
-        foreach(var cell in cells)
+        if(movableCells != null)
         {
-            boardCells[cell.x, cell.y].ToggleMoveIndicator(true);
+            foreach(var cell in movableCells)
+            {
+                boardCells[cell.x, cell.y].ToggleMoveIndicator(true);
+            }
+        }
+
+        if(attackCells != null)
+        {
+            foreach(var cell in attackCells)
+            {
+                boardCells[cell.x, cell.y].ToggleMoveIndicator(true);
+            }
         }
     }
 
     /// <summary>
     /// 특정 피스가 이동 가능한 모든 셀 좌표를 반환합니다.
+    /// movableCells: 빈 칸으로 이동 가능한 위치
+    /// attackCells: 적 기물을 공격할 수 있는 위치
     /// </summary>
-    public List<Vector2Int> GetMovableCells(DeployedPiece piece)
+    public void GetMovableCells(DeployedPiece piece, out List<Vector2Int> movableCells, out List<Vector2Int> attackCells)
     {
-        HashSet<Vector2Int> movableCells = new HashSet<Vector2Int>();
-        if (piece == null) return new List<Vector2Int>(movableCells);
+        HashSet<Vector2Int> _movableCells = new HashSet<Vector2Int>();
+        HashSet<Vector2Int> _attackCells = new HashSet<Vector2Int>();
+        if (piece == null)
+        {
+            movableCells = null;
+            attackCells = null;
+            return;
+        }
 
         Vector2Int start = piece.CellCoordinate;
         PieceMovement move = piece.PieceInfo.movement;
@@ -137,9 +155,22 @@ public class BoardManager : MonoSingleton<BoardManager>
                 {
                     Vector2Int next = start + dir * dist;
                     if (!IsValidCellCoordinate(next)) break;
-                    if (PieceManager.Instance.TryGetPieceAt(next, out _))
-                        break; // 막히면 그 뒤로는 못 감
-                    movableCells.Add(next);
+                    
+                    if (PieceManager.Instance.TryGetPieceAt(next, out DeployedPiece targetPiece))
+                    {
+                        // 기물이 있는 경우
+                        if (targetPiece.PieceColor != piece.PieceColor)
+                        {
+                            // 적 기물이면 공격 가능
+                            _attackCells.Add(next);
+                        }
+                        break; // 기물이 있으면 그 뒤로는 못 감
+                    }
+                    else
+                    {
+                        // 빈 칸이면 이동 가능
+                        _movableCells.Add(next);
+                    }
                 }
             }
         }
@@ -156,9 +187,22 @@ public class BoardManager : MonoSingleton<BoardManager>
                 {
                     Vector2Int next = start + dir * dist;
                     if (!IsValidCellCoordinate(next)) break;
-                    if (PieceManager.Instance.TryGetPieceAt(next, out _))
-                        break; // 막히면 그 뒤로는 못 감
-                    movableCells.Add(next);
+                    
+                    if (PieceManager.Instance.TryGetPieceAt(next, out DeployedPiece targetPiece))
+                    {
+                        // 기물이 있는 경우
+                        if (targetPiece.PieceColor != piece.PieceColor)
+                        {
+                            // 적 기물이면 공격 가능
+                            _attackCells.Add(next);
+                        }
+                        break; // 기물이 있으면 그 뒤로는 못 감
+                    }
+                    else
+                    {
+                        // 빈 칸이면 이동 가능
+                        _movableCells.Add(next);
+                    }
                 }
             }
         }
@@ -174,9 +218,22 @@ public class BoardManager : MonoSingleton<BoardManager>
             {
                 Vector2Int next = start + km;
                 if (!IsValidCellCoordinate(next)) continue;
-                if (PieceManager.Instance.TryGetPieceAt(next, out _))
-                    continue;
-                movableCells.Add(next);
+                
+                if (PieceManager.Instance.TryGetPieceAt(next, out DeployedPiece targetPiece))
+                {
+                    // 기물이 있는 경우
+                    if (targetPiece.PieceColor != piece.PieceColor)
+                    {
+                        // 적 기물이면 공격 가능
+                        _attackCells.Add(next);
+                    }
+                    // 아군 기물이면 이동 불가 (continue)
+                }
+                else
+                {
+                    // 빈 칸이면 이동 가능
+                    _movableCells.Add(next);
+                }
             }
         }
 
@@ -185,22 +242,22 @@ public class BoardManager : MonoSingleton<BoardManager>
         {
             int forward = piece.PieceColor == PieceColor.White ? 1 : -1;
 
-            // 1. 앞으로 한 칸
+            // 1. 앞으로 한 칸 이동 (공격 X, 이동만)
             Vector2Int forwardPos = start + new Vector2Int(0, forward);
             if (IsValidCellCoordinate(forwardPos) && !PieceManager.Instance.TryGetPieceAt(forwardPos, out _))
             {
-                movableCells.Add(forwardPos);
+                _movableCells.Add(forwardPos);
 
-                // 2. 처음 이동 시 두 칸
+                // 2. 처음 이동 시 두 칸 이동 (공격 X, 이동만)
                 bool isFirstMove = piece.MoveCount == 0;
                 Vector2Int doubleForwardPos = start + new Vector2Int(0, 2 * forward);
                 if (isFirstMove && IsValidCellCoordinate(doubleForwardPos) && !PieceManager.Instance.TryGetPieceAt(doubleForwardPos, out _))
                 {
-                    movableCells.Add(doubleForwardPos);
+                    _movableCells.Add(doubleForwardPos);
                 }
             }
 
-            // 3. 대각선 공격
+            // 3. 대각선 공격 (이동 X, 공격만)
             Vector2Int[] attackDirs = { new Vector2Int(-1, forward), new Vector2Int(1, forward) };
             foreach (var dir in attackDirs)
             {
@@ -208,8 +265,10 @@ public class BoardManager : MonoSingleton<BoardManager>
                 if (IsValidCellCoordinate(attackPos) && PieceManager.Instance.TryGetPieceAt(attackPos, out DeployedPiece target))
                 {
                     // 상대 기물인지 체크
-                    if(piece.PieceColor == target.PieceColor) continue;
-                    movableCells.Add(attackPos);
+                    if(piece.PieceColor != target.PieceColor)
+                    {
+                        _attackCells.Add(attackPos);
+                    }
                 }
             }
         }
@@ -226,13 +285,27 @@ public class BoardManager : MonoSingleton<BoardManager>
             {
                 Vector2Int next = start + dir;
                 if (!IsValidCellCoordinate(next)) continue;
-                if (PieceManager.Instance.TryGetPieceAt(next, out _))
-                    continue;
-                movableCells.Add(next);
+                
+                if (PieceManager.Instance.TryGetPieceAt(next, out DeployedPiece targetPiece))
+                {
+                    // 기물이 있는 경우
+                    if (targetPiece.PieceColor != piece.PieceColor)
+                    {
+                        // 적 기물이면 공격 가능
+                        _attackCells.Add(next);
+                    }
+                    // 아군 기물이면 이동 불가 (continue)
+                }
+                else
+                {
+                    // 빈 칸이면 이동 가능
+                    _movableCells.Add(next);
+                }
             }
         }
 
-        return new List<Vector2Int>(movableCells);
+        movableCells = new List<Vector2Int>(_movableCells);
+        attackCells = new List<Vector2Int>(_attackCells);
     }
 
     void OnDrawGizmos()

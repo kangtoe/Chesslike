@@ -44,7 +44,7 @@ public class PieceDebugger : MonoBehaviour
         }
         Debug.Log("모든 피스가 제거되었습니다.");
 
-        BoardManager.Instance.ActiveMoveIndicator(null);
+        BoardManager.Instance.ActiveCellIndicator(null);
     }
     
     void PrintFEN()

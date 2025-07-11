@@ -36,15 +36,20 @@ public class PieceManager : MonoSingleton<PieceManager>
     public void SelectPiece(DeployedPiece piece)
     {
         if(piece == null) return;
-        List<Vector2Int> movableCells = BoardManager.Instance.GetMovableCells(piece);
-        Debug.Log($"이동 가능한 셀: {string.Join(", ", movableCells)}");
-        BoardManager.Instance.ActiveMoveIndicator(movableCells);
+        
+        List<Vector2Int> movableCells = null;
+        List<Vector2Int> attackCells = null;
+        BoardManager.Instance.GetMovableCells(piece, out movableCells, out attackCells);
+        
+        //Debug.Log($"이동 가능한 셀: {string.Join(", ", movableCells)}");
+        BoardManager.Instance.ActiveCellIndicator(movableCells, attackCells);
+
         _selectedPiece = piece;
     }    
 
     public void DeselectPiece()
     {
-        BoardManager.Instance.ActiveMoveIndicator(null);
+        BoardManager.Instance.ActiveCellIndicator(null);
         _selectedPiece = null;
     }
 
@@ -85,8 +90,11 @@ public class PieceManager : MonoSingleton<PieceManager>
             return false;
         }
 
-        List<Vector2Int> movableCells = BoardManager.Instance.GetMovableCells(_selectedPiece);
-        if(!movableCells.Contains(toCoordinate))
+        List<Vector2Int> movableCells = null;
+        List<Vector2Int> attackCells = null;
+        BoardManager.Instance.GetMovableCells(_selectedPiece, out movableCells, out attackCells);
+
+        if(!movableCells.Contains(toCoordinate) && !attackCells.Contains(toCoordinate))
         {
             Debug.LogWarning($"Invalid cell coordinate: {toCoordinate}");
             return false;
