@@ -36,6 +36,18 @@ public class PieceManager : MonoSingleton<PieceManager>
     public void SelectPiece(DeployedPiece piece)
     {
         if(piece == null) return;
+
+        // 이미 선택된 피스가 있으면 공격 가능한지 확인
+        if(_selectedPiece != null)
+        {
+            List<Vector2Int> _attackCells = null;
+            BoardManager.Instance.GetMovableCells(_selectedPiece, out _, out _attackCells);
+            if(_attackCells.Contains(piece.CellCoordinate))
+            {
+                MovePiece(_selectedPiece.CellCoordinate, piece.CellCoordinate);
+                return;
+            }
+        }
         
         List<Vector2Int> movableCells = null;
         List<Vector2Int> attackCells = null;
