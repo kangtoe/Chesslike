@@ -21,7 +21,8 @@ MonoBehaviour:
   attack: 1
   defense: 1
   movement:
-    rookMove: 1
-    bishopMove: 1
-    isKnight: 0
-    isPawn: 0
+    isRookMove: 0
+    isBishopMove: 0
+    isKnightMove: 0
+    isPawnMove: 0
+    isKingMove: 1

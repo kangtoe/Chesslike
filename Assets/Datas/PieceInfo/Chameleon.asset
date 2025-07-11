@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Chameleon
   m_EditorClassIdentifier: 
   pieceName: Chameleon
-  pieceAlphabet: 77
+  pieceAlphabet: 88
   blackSprite: {fileID: 21300000, guid: a492ae206a0406745b8e5025d6aca878, type: 3}
   whiteSprite: {fileID: 21300000, guid: baf9464b361850746abcd3ecb17fb186, type: 3}
   value: 4
@@ -21,7 +21,8 @@ MonoBehaviour:
   attack: 1
   defense: 1
   movement:
-    rookMove: 1
-    bishopMove: 1
-    isKnight: 1
-    isPawn: 0
+    isRookMove: 1
+    isBishopMove: 1
+    isKnightMove: 1
+    isPawnMove: 0
+    isKingMove: 0

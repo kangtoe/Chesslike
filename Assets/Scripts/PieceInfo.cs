@@ -11,10 +11,11 @@ public enum PieceColor
 [System.Serializable]
 public struct PieceMovement
 {
-    public int rookMove;    
-    public int bishopMove;
-    public bool isKnight;
-    public bool isPawn;
+    public bool isRookMove;    
+    public bool isBishopMove;
+    public bool isKnightMove;
+    public bool isPawnMove;
+    public bool isKingMove;
 }
 
 [CreateAssetMenu(fileName = "New Piece Info", menuName = "Piece Info")]
