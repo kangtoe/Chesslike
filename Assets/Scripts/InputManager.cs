@@ -11,21 +11,24 @@ public class InputManager : MonoSingleton<InputManager>
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
+
+        // 마우스 오버 피스 확인
         if (Physics.Raycast(ray, out hit))
         {
             var piece = hit.collider.GetComponent<DeployedPiece>();
             MouseHoverPiece(piece);
-
-            if (Input.GetMouseButtonDown(0)) // 마우스 왼쪽 클릭
-            {
-                OnMouseClick(hit);
-            }
         }
         else
         {
             // 마우스가 아무것도 가리키지 않을 때 호버 해제
             MouseHoverPiece(null);
         }    
+
+        // 마우스 왼쪽 클릭
+        if (Input.GetMouseButtonDown(0)) 
+        {
+            OnMouseClick(hit);
+        }
     }
 
     void MouseHoverPiece(DeployedPiece newHoveredPiece)
@@ -51,34 +54,36 @@ public class InputManager : MonoSingleton<InputManager>
 
     void OnMouseClick(RaycastHit hit)
     {
-        var selectedPiece = PieceManager.Instance.SelectedPiece;
-        if(selectedPiece == null)
+        if(hit.collider != null)
         {
+            var selectedPiece = PieceManager.Instance.SelectedPiece;
+
             // Piece 클릭 판별
-            var piece = hit.collider.GetComponent<DeployedPiece>();                
+            var piece = hit.collider.GetComponent<DeployedPiece>();
             if (piece != null)
             {
                 Debug.Log($"기물을 클릭했습니다: {piece.PieceInfo.pieceName}, 좌표: ({piece.CellCoordinate})");
 
                 PieceManager.Instance.SelectPiece(piece);
                 return;
-            }                                
-        }
-        else
-        {
-            // BoardCell 클릭 판별
-            var cell = hit.collider.GetComponent<BoardCell>();
-            if (cell != null)
+            }
+
+            if(selectedPiece != null)
             {
-                Debug.Log($"보드 셀 클릭: 좌표=({cell.CellCoordinate.x}, {cell.CellCoordinate.y})");                        
-                bool isMoved = PieceManager.Instance.MovePiece(cell.CellCoordinate);
-                if(!isMoved)
+                // BoardCell 클릭 판별
+                var cell = hit.collider.GetComponent<BoardCell>();
+                if (cell != null)
                 {
-                    PieceManager.Instance.DeselectPiece();
-                }
-                return;
-            }            
-        }
+                    Debug.Log($"보드 셀 클릭: 좌표=({cell.CellCoordinate.x}, {cell.CellCoordinate.y})");                        
+                    bool isMoved = PieceManager.Instance.MovePiece(cell.CellCoordinate);
+                    if(!isMoved)
+                    {
+                        PieceManager.Instance.DeselectPiece();
+                    }
+                    return;
+                }            
+            }
+        }       
 
         // 피스 선택 해제
         PieceManager.Instance.DeselectPiece();    
