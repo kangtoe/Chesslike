@@ -55,15 +55,15 @@ public class PieceDebugger : MonoBehaviour
             return;
         }
 
-        Debug.Log("=== 보드 상태 ===");
+        // Debug.Log("=== 보드 상태 ===");
 
-        foreach(var kvp in PieceManager.Instance.DeployedPieces)
-        {
-            Vector2Int coordinate = kvp.Key;
-            DeployedPiece piece = kvp.Value;
-            Debug.Log($"좌표 {coordinate}: {piece.name}");
-        }
-        Debug.Log("================");
+        // foreach(var kvp in PieceManager.Instance.DeployedPieces)
+        // {
+        //     Vector2Int coordinate = kvp.Key;
+        //     DeployedPiece piece = kvp.Value;
+        //     Debug.Log($"좌표 {coordinate}: {piece.name}");
+        // }
+        // Debug.Log("================");
 
         fen = PieceManager.Instance.GetFENFromCurrentBoard();
         //Debug.Log($"FEN: {fen}");
@@ -77,7 +77,7 @@ public class PieceDebugger : MonoBehaviour
             return;
         }
 
-        Debug.Log("=== 최적 이동 ===");
+        // Debug.Log("=== 최적 이동 ===");
 
         string piecePlacement = PieceManager.Instance.GetFENFromCurrentBoard();
         white_bestMove = AIManager.Instance.GetBestMove(piecePlacement, PieceColor.White);

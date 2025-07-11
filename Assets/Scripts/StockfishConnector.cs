@@ -41,7 +41,7 @@ public class StockfishConnector : MonoBehaviour
     {
         stockfishInput.WriteLine(command);
         stockfishInput.Flush();
-        Debug.Log("[Sent] " + command);
+        //Debug.Log("[Sent] " + command);
     }
 
     void ReadUntil(string keyword)
@@ -49,7 +49,7 @@ public class StockfishConnector : MonoBehaviour
         string line;
         while ((line = stockfishOutput.ReadLine()) != null)
         {
-            Debug.Log("[Recv] " + line);
+            //Debug.Log("[Recv] " + line);
             if (line.Contains(keyword)) break;
         }
     }
@@ -83,7 +83,7 @@ public class StockfishConnector : MonoBehaviour
         string line;
         while ((line = stockfishOutput.ReadLine()) != null)
         {
-            Debug.Log("[Recv] " + line);
+            //Debug.Log("[Recv] " + line);
             if (line.StartsWith("bestmove"))
             {
                 var parts = line.Split(' ');
