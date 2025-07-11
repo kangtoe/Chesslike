@@ -94,17 +94,4 @@ public class StockfishConnector : MonoBehaviour
         }
         return bestMove;
     }
-
-    /// <summary>
-    /// 개별 기물을 Fairy-Stockfish 엔진에 등록합니다.
-    /// </summary>
-    public void RegisterPieceToEngine(string pieceAlphabet, string pieceDefinition)
-    {
-        if (string.IsNullOrEmpty(pieceAlphabet) || string.IsNullOrEmpty(pieceDefinition)) return;
-
-        // Fairy-Stockfish에 기물 등록
-        SendCommand($"setoption name CustomPiece value {pieceAlphabet}={pieceDefinition}");
-        
-        Debug.Log($"기물 등록: {pieceAlphabet} = {pieceDefinition}");
-    }
 }

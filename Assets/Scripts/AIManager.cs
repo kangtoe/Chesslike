@@ -3,7 +3,6 @@ using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 [RequireComponent(typeof(StockfishConnector))]
-[RequireComponent(typeof(CustomPieceRegister))]
 public class AIManager : MonoSingleton<AIManager>
 {
     [Header("AI Settings")]
@@ -11,15 +10,11 @@ public class AIManager : MonoSingleton<AIManager>
     
     [Header("Components")]
     [ReadOnly] [SerializeField] StockfishConnector stockfishConnector;
-    [ReadOnly] [SerializeField] CustomPieceRegister customPieceManager;
     
     void OnValidate()
     {    
         if (stockfishConnector == null)
             stockfishConnector = GetComponent<StockfishConnector>();
-            
-        if (customPieceManager == null)
-            customPieceManager = GetComponent<CustomPieceRegister>();
     }
 
     void Start()
@@ -40,14 +35,7 @@ public class AIManager : MonoSingleton<AIManager>
             return;
         }
         
-        if (customPieceManager == null)
-        {
-            Debug.LogError("CustomPieceManager를 찾을 수 없습니다.");
-            return;
-        }
-        
-        stockfishConnector.StartStockfish();
-        customPieceManager.RegisterCustomPieces(stockfishConnector);
+        stockfishConnector.StartStockfish();        
 
         Debug.Log("=== AI 시스템 초기화 완료 ===");
     }
