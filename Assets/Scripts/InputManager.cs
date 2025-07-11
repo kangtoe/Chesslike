@@ -58,7 +58,7 @@ public class InputManager : MonoSingleton<InputManager>
             var piece = hit.collider.GetComponent<DeployedPiece>();                
             if (piece != null)
             {
-                Debug.Log($"기물을 클릭했습니다: {piece.name}");
+                Debug.Log($"기물을 클릭했습니다: {piece.PieceInfo.pieceName}, 좌표: ({piece.CellCoordinate})");
 
                 PieceManager.Instance.SelectPiece(piece);
                 return;
