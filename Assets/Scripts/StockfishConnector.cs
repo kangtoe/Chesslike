@@ -17,10 +17,12 @@ public class StockfishConnector : MonoBehaviour
 
         stockfishProcess = new Process();
         stockfishProcess.StartInfo.FileName = exePath;
+        stockfishProcess.StartInfo.Arguments = "load variants.ini";
         stockfishProcess.StartInfo.UseShellExecute = false;
         stockfishProcess.StartInfo.RedirectStandardInput = true;
         stockfishProcess.StartInfo.RedirectStandardOutput = true;
         stockfishProcess.StartInfo.CreateNoWindow = true;
+        stockfishProcess.StartInfo.WorkingDirectory = Application.streamingAssetsPath;
         stockfishProcess.Start();
 
         stockfishInput = stockfishProcess.StandardInput;
@@ -30,7 +32,9 @@ public class StockfishConnector : MonoBehaviour
         SendCommand("isready");
         ReadUntil("readyok");
 
-        Debug.Log("Fairy-Stockfish 준비 완료.");
+        SendCommand($"setoption name UCI_Variant value chesslike");
+
+        Debug.Log("Fairy-Stockfish 준비 완료 (사용자 정의 변형 로드됨).");
     }
 
     public void SendCommand(string command)
