@@ -17,10 +17,12 @@ public class StockfishConnector : MonoBehaviour
 
         stockfishProcess = new Process();
         stockfishProcess.StartInfo.FileName = exePath;
+        stockfishProcess.StartInfo.Arguments = "load variants.ini";
         stockfishProcess.StartInfo.UseShellExecute = false;
         stockfishProcess.StartInfo.RedirectStandardInput = true;
         stockfishProcess.StartInfo.RedirectStandardOutput = true;
         stockfishProcess.StartInfo.CreateNoWindow = true;
+        stockfishProcess.StartInfo.WorkingDirectory = Application.streamingAssetsPath;
         stockfishProcess.Start();
 
         stockfishInput = stockfishProcess.StandardInput;
@@ -29,6 +31,8 @@ public class StockfishConnector : MonoBehaviour
         SendCommand("uci");
         SendCommand("isready");
         ReadUntil("readyok");
+
+        SendCommand("setoption name UCI_Variant value chesslike");
 
         Debug.Log("Fairy-Stockfish 준비 완료.");
     }
@@ -71,7 +75,7 @@ public class StockfishConnector : MonoBehaviour
         // FEN은 "... w - - 0 1" 또는 "... b - - 0 1" 형태여야 함
         string colorStr = (color == PieceColor.White) ? "w" : "b";
         fen += " " + colorStr + " - - 0 1";
-
+        
         SendCommand("position fen " + fen);
         SendCommand("go depth " + depth);
 
@@ -89,18 +93,5 @@ public class StockfishConnector : MonoBehaviour
             }
         }
         return bestMove;
-    }
-
-    /// <summary>
-    /// 개별 기물을 Fairy-Stockfish 엔진에 등록합니다.
-    /// </summary>
-    public void RegisterPieceToEngine(string pieceAlphabet, string pieceDefinition)
-    {
-        if (string.IsNullOrEmpty(pieceAlphabet) || string.IsNullOrEmpty(pieceDefinition)) return;
-
-        // Fairy-Stockfish에 기물 등록
-        SendCommand($"setoption name CustomPiece value {pieceAlphabet}={pieceDefinition}");
-        
-        Debug.Log($"기물 등록: {pieceAlphabet} = {pieceDefinition}");
     }
 }

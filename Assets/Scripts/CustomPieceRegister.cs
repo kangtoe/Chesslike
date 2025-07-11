@@ -41,47 +41,6 @@ public class CustomPieceRegister : MonoBehaviour
     }
 
     /// <summary>
-    /// 커스텀 기물들을 Fairy-Stockfish 엔진에 등록합니다.
-    /// </summary>
-    public void RegisterCustomPieces(StockfishConnector connector)
-    {
-        if (customPieces == null || customPieces.Count == 0)
-        {
-            Debug.LogWarning("등록할 커스텀 기물이 없습니다.");
-            return;
-        }
-
-        int registeredCount = 0;
-        
-        foreach (var piece in customPieces)
-        {
-            if (piece == null) continue;
-            
-            // Fairy-Stockfish에 기물 등록
-            RegisterPieceToEngine(piece, connector);
-            registeredCount++;
-        }
-        
-        Debug.Log($"총 {registeredCount}개의 커스텀 기물이 등록되었습니다.");
-    }
-
-    /// <summary>
-    /// 개별 기물을 Fairy-Stockfish 엔진에 등록합니다.
-    /// </summary>
-    void RegisterPieceToEngine(PieceInfo piece, StockfishConnector connector)
-    {
-        if (piece == null || connector == null) return;
-
-        // 기물 정의 문자열 생성
-        string pieceDefinition = GeneratePieceDefinition(piece);
-        
-        // Fairy-Stockfish에 기물 등록
-        connector.RegisterPieceToEngine(piece.pieceAlphabet.ToString(), pieceDefinition);
-        
-        Debug.Log($"기물 등록: {piece.pieceName} ({piece.pieceAlphabet}) = {pieceDefinition}");
-    }
-
-    /// <summary>
     /// PieceInfo를 기반으로 Fairy-Stockfish 기물 정의 문자열을 생성합니다.
     /// </summary>
     string GeneratePieceDefinition(PieceInfo piece)
