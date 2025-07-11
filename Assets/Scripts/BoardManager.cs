@@ -119,7 +119,7 @@ public class BoardManager : MonoSingleton<BoardManager>
         {
             foreach(var cell in attackCells)
             {
-                boardCells[cell.x, cell.y].ToggleMoveIndicator(true);
+                boardCells[cell.x, cell.y].ToggleMoveIndicator(true, Color.red);
             }
         }
     }

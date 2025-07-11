@@ -28,8 +28,9 @@ public class BoardCell : MonoBehaviour
         if(CellRenderer) CellRenderer.material.color = color;
     }
     
-    public void ToggleMoveIndicator(bool isActive)
+    public void ToggleMoveIndicator(bool isActive, Color? color = null)
     {
         if(moveIndicator) moveIndicator.SetActive(isActive);
+        if(moveIndicator) moveIndicator.GetComponent<Renderer>().material.color = color ?? Color.white;
     }    
 }
