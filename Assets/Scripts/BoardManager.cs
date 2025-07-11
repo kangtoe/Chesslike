@@ -125,36 +125,46 @@ public class BoardManager : MonoSingleton<BoardManager>
         Vector2Int start = piece.CellCoordinate;
         PieceMovement move = piece.PieceInfo.movement;
 
-        // 상, 하, 좌, 우 4방향
-        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
-        foreach (var dir in directions)
+        // 1. 룩 이동 (상, 하, 좌, 우 4방향) - 무제한 이동
+        if (move.isRookMove)
         {
-            for (int dist = 1; dist <= move.rookMove; dist++)
+            Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+            foreach (var dir in directions)
             {
-                Vector2Int next = start + dir * dist;
-                if (!IsValidCellCoordinate(next)) break;
-                if (PieceManager.Instance.TryGetPieceAt(next, out _))
-                    break; // 막히면 그 뒤로는 못 감
-                movableCells.Add(next);
+                // 보드 크기에 맞게 최대 이동 거리 계산
+                int maxDistance = Mathf.Max(boardWidth, boardHeight) - 1;
+                for (int dist = 1; dist <= maxDistance; dist++)
+                {
+                    Vector2Int next = start + dir * dist;
+                    if (!IsValidCellCoordinate(next)) break;
+                    if (PieceManager.Instance.TryGetPieceAt(next, out _))
+                        break; // 막히면 그 뒤로는 못 감
+                    movableCells.Add(next);
+                }
             }
         }
 
-        // 2. 대각선 이동 (diag)
-        Vector2Int[] diagDirs = { new Vector2Int(1, 1), new Vector2Int(-1, 1), new Vector2Int(1, -1), new Vector2Int(-1, -1) };
-        foreach (var dir in diagDirs)
+        // 2. 비숍 이동 (대각선) - 무제한 이동
+        if (move.isBishopMove)
         {
-            for (int dist = 1; dist <= move.bishopMove; dist++)
+            Vector2Int[] diagDirs = { new Vector2Int(1, 1), new Vector2Int(-1, 1), new Vector2Int(1, -1), new Vector2Int(-1, -1) };
+            foreach (var dir in diagDirs)
             {
-                Vector2Int next = start + dir * dist;
-                if (!IsValidCellCoordinate(next)) break;
-                if (PieceManager.Instance.TryGetPieceAt(next, out _))
-                    break; // 막히면 그 뒤로는 못 감
-                movableCells.Add(next);
+                // 보드 크기에 맞게 최대 이동 거리 계산
+                int maxDistance = Mathf.Min(boardWidth, boardHeight) - 1;
+                for (int dist = 1; dist <= maxDistance; dist++)
+                {
+                    Vector2Int next = start + dir * dist;
+                    if (!IsValidCellCoordinate(next)) break;
+                    if (PieceManager.Instance.TryGetPieceAt(next, out _))
+                        break; // 막히면 그 뒤로는 못 감
+                    movableCells.Add(next);
+                }
             }
         }
 
         // 3. 나이트 이동
-        if (move.isKnight)
+        if (move.isKnightMove)
         {
             Vector2Int[] knightMoves = {
                 new Vector2Int(1,2), new Vector2Int(2,1), new Vector2Int(-1,2), new Vector2Int(-2,1),
@@ -171,7 +181,7 @@ public class BoardManager : MonoSingleton<BoardManager>
         }
 
         // 4. 폰 이동
-        if (move.isPawn)
+        if (move.isPawnMove)
         {
             int forward = piece.PieceColor == PieceColor.White ? 1 : -1;
 
@@ -201,6 +211,24 @@ public class BoardManager : MonoSingleton<BoardManager>
                     if(piece.PieceColor == target.PieceColor) continue;
                     movableCells.Add(attackPos);
                 }
+            }
+        }
+
+        // 5. 킹 이동
+        if (move.isKingMove)
+        {
+            // 킹은 모든 방향으로 1칸씩만 이동
+            Vector2Int[] kingMoves = {
+                Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+                new Vector2Int(1,1), new Vector2Int(1,-1), new Vector2Int(-1,1), new Vector2Int(-1,-1)
+            };
+            foreach (var dir in kingMoves)
+            {
+                Vector2Int next = start + dir;
+                if (!IsValidCellCoordinate(next)) continue;
+                if (PieceManager.Instance.TryGetPieceAt(next, out _))
+                    continue;
+                movableCells.Add(next);
             }
         }
 
