@@ -11,6 +11,15 @@ public class CustomPieceRegister : MonoBehaviour
     {
         // 중복 제거
         CheckPieceValidity();
+        UpdateIniFile();
+    }
+
+    [ExecuteInEditMode]
+    void Start()
+    {
+        // 중복 제거
+        CheckPieceValidity();
+        UpdateIniFile();
     }
 
     /// <summary>
@@ -70,7 +79,7 @@ public class CustomPieceRegister : MonoBehaviour
     /// 커스텀 기물 정보를 Fairy-Stockfish ini 파일에 반영합니다.
     /// </summary>
     /// <param name="iniFilePath">ini 파일 경로</param>
-    [NaughtyAttributes.Button]
+    //[NaughtyAttributes.Button]
     public void UpdateIniFile()
     {
         string iniFilePath = Path.Combine(Application.streamingAssetsPath, "variants.ini");

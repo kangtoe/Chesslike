@@ -61,3 +61,7 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+# Auto-generated Fairy-Stockfish variants file
+Assets/StreamingAssets/variants.ini
+Assets/StreamingAssets/variants.ini.meta
+
