@@ -9,6 +9,9 @@ public class InputManager : MonoSingleton<InputManager>
 
     void Update()
     {
+        // 플레이어 턴이 아니면 입력 무시
+        if(!TurnManager.Instance.IsPlayerTurn) return;
+
         // 이동 애니메이션 중이면 입력 무시
         if(PieceManager.Instance.IsMoving) return;
 

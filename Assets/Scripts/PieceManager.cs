@@ -56,7 +56,7 @@ public class PieceManager : MonoSingleton<PieceManager>
             BoardManager.Instance.GetMovableCells(_selectedPiece, out _, out _attackCells);
             if(_attackCells.Contains(piece.CellCoordinate))
             {
-                StartCoroutine(MovePieceAnimated(_selectedPiece.CellCoordinate, piece.CellCoordinate));
+                MovePiece(piece.CellCoordinate);
                 return;
             }
         }
@@ -188,37 +188,9 @@ public class PieceManager : MonoSingleton<PieceManager>
         _isMoving = false;
         
         Debug.Log($"기물 이동: {fromCoordinate} → {toCoordinate}");
-    }
-
-    bool MovePieceInternal(Vector2Int fromCoordinate, Vector2Int toCoordinate)
-    {
-        if(!IsValidCellCoordinate(toCoordinate)) return false;
-
-        if(!deployedPieces.ContainsKey(fromCoordinate))
-        {
-            Debug.LogError($"시작 좌표 {fromCoordinate}에 피스가 없습니다.");
-            return false;
-        }
-
-        // 목표 좌표에 이미 피스가 있다면 제거 (공격)
-        if(deployedPieces.ContainsKey(toCoordinate))RemovePiece(toCoordinate);
-
-        DeployedPiece piece = deployedPieces[fromCoordinate];
-        BoardCell targetCell = BoardManager.Instance.GetCell(toCoordinate);
         
-        // 피스 위치 업데이트
-        piece.transform.position = targetCell.PieceDeployPoint;
-        piece.SetCellCoordinate(toCoordinate);
-        piece.MoveCount++;
-
-        // 딕셔너리 업데이트
-        deployedPieces.Remove(fromCoordinate);
-        deployedPieces[toCoordinate] = piece;
-
-        DeselectPiece();
-
-        Debug.Log($"피스가 {fromCoordinate}에서 {toCoordinate}로 이동했습니다.");
-        return true;
+        // 이동 완료 후 턴 전환
+        TurnManager.Instance.NextTurn();
     }
 
     public bool RemovePiece(Vector2Int cellCoordinate)
