@@ -5,16 +5,27 @@ using UnityEngine;
 public class SummonManager : MonoSingleton<SummonManager>
 {
     [Header("Summon Piece UI")]
-    [SerializeField] PieceInfo[] summonPieceInfos;
+    [SerializeField] PieceInfo[] blackSummonPieceInfos;
+    [SerializeField] PieceInfo[] whiteSummonPieceInfos;    
+    
+    [Header("Summon Piece UI Parent")]
+    [SerializeField] Transform blackSummonPieceParent;
+    [SerializeField] Transform whiteSummonPieceParent;
+
+    [Header("Summon Piece UI Prefab")]
     [SerializeField] SummonPieceUI summonPiecePrefab;
-    [SerializeField] Transform summonPieceParent;
 
     void Start()
     {
-        foreach (var pieceInfo in summonPieceInfos)
+        foreach (var pieceInfo in whiteSummonPieceInfos)
         {
-            SummonPieceUI summonPiece = Instantiate(summonPiecePrefab, summonPieceParent);
+            SummonPieceUI summonPiece = Instantiate(summonPiecePrefab, whiteSummonPieceParent);
             summonPiece.SetPieceInfo(pieceInfo, PieceColor.White);
+        }
+        foreach (var pieceInfo in blackSummonPieceInfos)
+        {
+            SummonPieceUI summonPiece = Instantiate(summonPiecePrefab, blackSummonPieceParent);
+            summonPiece.SetPieceInfo(pieceInfo, PieceColor.Black);
         }
     }
 
