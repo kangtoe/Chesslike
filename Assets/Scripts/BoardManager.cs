@@ -308,6 +308,31 @@ public class BoardManager : MonoSingleton<BoardManager>
         attackCells = new List<Vector2Int>(_attackCells);
     }
 
+    /// <summary>
+    /// 스크린 위치에서 보드 셀 좌표를 가져오는 유틸리티 메서드
+    /// </summary>
+    /// <param name="screenPosition">스크린 위치</param>
+    /// <returns>보드 셀 좌표 (없으면 null)</returns>
+    public Vector2Int? GetBoardCellFromScreenPosition(Vector2 screenPosition)
+    {
+        Camera camera = Camera.main;
+        if (camera == null) return null;
+
+        Ray ray = camera.ScreenPointToRay(screenPosition);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit))
+        {
+            BoardCell cell = hit.collider.GetComponent<BoardCell>();
+            if (cell != null)
+            {
+                return cell.CellCoordinate;
+            }
+        }
+
+        return null;
+    }
+
     void OnDrawGizmos()
     {
         if (boardCells == null) return;

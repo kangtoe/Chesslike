@@ -23,25 +23,41 @@ public class PieceManager : MonoSingleton<PieceManager>
     
     [NaughtyAttributes.ReadOnly]
     [SerializeField] bool _isMoving = false;
-    public bool IsMoving => _isMoving;
+    public bool IsMoving => _isMoving;    
 
     // 키: 셀 좌표, 값: 배치된 피스
     Dictionary<Vector2Int, DeployedPiece> deployedPieces = new Dictionary<Vector2Int, DeployedPiece>();
     public Dictionary<Vector2Int, DeployedPiece> DeployedPieces => deployedPieces;
 
-    bool IsValidCellCoordinate(Vector2Int cellCoordinate)
-    {
-        if(!BoardManager.Instance.IsValidCellCoordinate(cellCoordinate))
-        {
-            Debug.LogError($"Invalid cell coordinate: {cellCoordinate}");
-            return false;
-        }
-        return true;
-    }
+    bool IsValidCellCoordinate(Vector2Int cellCoordinate) => BoardManager.Instance.IsValidCellCoordinate(cellCoordinate);
 
     public bool TryGetPieceAt(Vector2Int cellCoordinate, out DeployedPiece piece)
     {
         return deployedPieces.TryGetValue(cellCoordinate, out piece);
+    }
+
+    /// <summary>
+    /// 해당 위치에 기물을 배치할 수 있는지 확인하는 유틸리티 메서드
+    /// </summary>
+    /// <param name="cellCoordinate">확인할 셀 좌표</param>
+    /// <returns>배치 가능 여부</returns>
+    public bool IsValidPlacementPosition(Vector2Int cellCoordinate)
+    {
+        // 보드 범위 내인지 확인
+        if (!IsValidCellCoordinate(cellCoordinate))
+        {
+            Debug.Log($"보드 범위를 벗어남: {cellCoordinate}");
+            return false;
+        }
+        
+        // 이미 기물이 배치되어 있는지 확인
+        if (TryGetPieceAt(cellCoordinate, out DeployedPiece existingPiece))
+        {
+            Debug.Log($"이미 기물이 배치되어 있음: {cellCoordinate}");
+            return false;
+        }
+        
+        return true;
     }
 
     #region 피스 제어
@@ -85,13 +101,7 @@ public class PieceManager : MonoSingleton<PieceManager>
             return false;
         }
 
-        if(!IsValidCellCoordinate(cellCoordinate)) return false;
-        
-        if(deployedPieces.ContainsKey(cellCoordinate))
-        {
-            Debug.LogWarning($"이미 좌표 {cellCoordinate}에 피스가 배치되어 있습니다.");
-            return false;
-        }
+        if(!IsValidPlacementPosition(cellCoordinate)) return false;
 
         BoardCell cell = BoardManager.Instance.GetCell(cellCoordinate);
         DeployedPiece piece = Instantiate(_piecePrefab, _pieceRoot.transform);
