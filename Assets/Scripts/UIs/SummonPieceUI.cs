@@ -137,6 +137,9 @@ public class SummonPieceUI : MonoBehaviour
             // 드래그 시작 시의 오프셋을 유지하며 UI 위치 업데이트
             rectTransform.anchoredPosition = mouseUIPos + dragStartOffset;
         }
+        
+        // 셀 하이라이트 업데이트
+        BoardManager.Instance.UpdateCellHighlight(eventData.position, pieceInfo, pieceColor);
     }
 
     /// <summary>
@@ -147,6 +150,9 @@ public class SummonPieceUI : MonoBehaviour
         if (!isDragging) return;
         
         isDragging = false;
+        
+        // 셀 하이라이트 제거
+        BoardManager.Instance.ClearCellHighlight();
         
         // 마우스 위치에서 보드 셀 확인
         Vector2Int? targetCell = BoardManager.Instance.GetBoardCellFromScreenPosition(eventData.position);

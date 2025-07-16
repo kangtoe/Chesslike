@@ -30,6 +30,15 @@ public class BoardManager : MonoSingleton<BoardManager>
     [Header("보드 셀")]
     private BoardCell[,] boardCells; // 보드의 셀들을 저장하는 2차원 배열
     private Vector2Int selectedCellPosition = new Vector2Int(-1, -1); // 선택된 셀의 위치 (-1, -1은 선택되지 않음을 의미)
+
+    [Header("셀 하이라이트 색상")]
+    [SerializeField] private Color validPlacementColor = Color.green;    // 유효한 배치 위치 색상
+    [SerializeField] private Color invalidPlacementColor = Color.red;    // 유효하지 않은 배치 위치 색상
+    
+    // 셀 하이라이트 상태
+    private BoardCell currentHighlightedCell;
+    private Color originalHighlightCellColor;
+    private bool hasHighlightColorChanged = false;
     public BoardCell SelectedCell 
     { 
         get 
@@ -332,6 +341,77 @@ public class BoardManager : MonoSingleton<BoardManager>
 
         return null;
     }
+
+    #region 셀 하이라이트 기능
+
+    /// <summary>
+    /// 스크린 위치에 따른 셀 하이라이트 업데이트
+    /// </summary>
+    /// <param name="screenPosition">스크린 위치</param>
+    /// <param name="pieceInfo">배치할 기물 정보 (유효성 검사용)</param>
+    /// <param name="pieceColor">기물 색상 (유효성 검사용)</param>
+    public void UpdateCellHighlight(Vector2 screenPosition, PieceInfo pieceInfo = null, PieceColor pieceColor = PieceColor.White)
+    {
+        Vector2Int? targetCell = GetBoardCellFromScreenPosition(screenPosition);
+        
+        if (targetCell.HasValue)
+        {
+            BoardCell cell = GetCell(targetCell.Value);
+            
+            // 이전에 하이라이트된 셀과 다른 셀인 경우
+            if (currentHighlightedCell != cell)
+            {
+                // 이전 셀의 색상 복원
+                ClearCellHighlight();
+                
+                // 새 셀 하이라이트
+                if (cell != null)
+                {
+                    HighlightCell(cell, targetCell.Value);
+                }
+            }
+        }
+        else
+        {
+            // 마우스가 보드 밖에 있으면 하이라이트 제거
+            ClearCellHighlight();
+        }
+    }
+
+    /// <summary>
+    /// 특정 셀을 하이라이트
+    /// </summary>
+    /// <param name="cell">하이라이트할 셀</param>
+    /// <param name="cellPosition">셀 위치 (유효성 검사용)</param>
+    private void HighlightCell(BoardCell cell, Vector2Int cellPosition)
+    {
+        currentHighlightedCell = cell;
+        originalHighlightCellColor = cell.CellRenderer.material.color;
+        hasHighlightColorChanged = true;
+        
+        // 유효한 배치 위치인지 확인
+        bool isValidPosition = PieceManager.Instance.IsValidPlacementPosition(cellPosition);
+        Color highlightColor = isValidPosition ? validPlacementColor : invalidPlacementColor;
+        
+        cell.SetColor(highlightColor);
+        
+        Debug.Log($"셀 하이라이트: {cellPosition} - {(isValidPosition ? "유효" : "무효")}");
+    }
+
+    /// <summary>
+    /// 현재 하이라이트 제거 및 원래 색상 복원
+    /// </summary>
+    public void ClearCellHighlight()
+    {
+        if (currentHighlightedCell != null && hasHighlightColorChanged)
+        {
+            currentHighlightedCell.SetColor(originalHighlightCellColor);
+            currentHighlightedCell = null;
+            hasHighlightColorChanged = false;
+        }
+    }
+
+    #endregion
 
     void OnDrawGizmos()
     {
