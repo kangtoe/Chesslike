@@ -14,19 +14,37 @@ public class SummonPieceUI : MonoBehaviour
     [Header("드래그 설정")]
     [SerializeField] float returnDuration = 0.5f; // 원래 위치로 돌아가는 시간
     
+    [Header("선택 상태 표시")]
+    [SerializeField] GameObject selectionIndicator; // 선택 표시 오브젝트 (optional)
+    [SerializeField] Color selectedColor = Color.yellow; // 선택됐을 때 색상
+    [SerializeField] float selectedScale = 1.1f; // 선택됐을 때 크기
+    
     private Vector2 originalAnchoredPosition;
     private Vector2 dragStartOffset; // 드래그 시작 시 마우스와 UI 사이의 오프셋
     private bool isDragging = false;
+    private bool isSelected = false;
     private EventTrigger eventTrigger;
     private RectTransform rectTransform;
     private Canvas parentCanvas;
+    
+    // 원래 상태 저장
+    private Color originalColor;
+    private Vector3 originalScale;
 
     void Start()
     {
         rectTransform = GetComponent<RectTransform>();
         originalAnchoredPosition = rectTransform.anchoredPosition;
+        originalColor = image != null ? image.color : Color.white;
+        originalScale = rectTransform.localScale;
         parentCanvas = GetComponentInParent<Canvas>();
         SetupEventTrigger();
+        
+        // 선택 표시 오브젝트 초기화
+        if (selectionIndicator != null)
+        {
+            selectionIndicator.SetActive(false);
+        }
     }
 
     public void SetPieceInfo(PieceInfo pieceInfo, PieceColor pieceColor)
@@ -34,6 +52,44 @@ public class SummonPieceUI : MonoBehaviour
         this.pieceInfo = pieceInfo;
         this.pieceColor = pieceColor;
         UpdatePieceSprite();
+    }
+
+    /// <summary>
+    /// 선택 상태 설정
+    /// </summary>
+    /// <param name="selected">선택 여부</param>
+    public void SetSelected(bool selected)
+    {
+        isSelected = selected;
+        
+        if (selected)
+        {
+            // 선택 상태 시각적 효과
+            if (image != null)
+            {
+                image.color = selectedColor;
+            }
+            rectTransform.localScale = originalScale * selectedScale;
+            
+            if (selectionIndicator != null)
+            {
+                selectionIndicator.SetActive(true);
+            }
+        }
+        else
+        {
+            // 원래 상태로 복원
+            if (image != null)
+            {
+                image.color = originalColor;
+            }
+            rectTransform.localScale = originalScale;
+            
+            if (selectionIndicator != null)
+            {
+                selectionIndicator.SetActive(false);
+            }
+        }
     }
 
     /// <summary>
@@ -49,6 +105,7 @@ public class SummonPieceUI : MonoBehaviour
         if (targetSprite != null)
         {
             image.sprite = targetSprite;
+            originalColor = image.color; // 스프라이트 변경 후 원래 색상 업데이트
             Debug.Log($"스프라이트 업데이트: {pieceInfo.pieceName} ({pieceColor})");
         }
         else
@@ -68,6 +125,14 @@ public class SummonPieceUI : MonoBehaviour
         {
             eventTrigger = gameObject.AddComponent<EventTrigger>();
         }
+
+        // PointerClick 이벤트 추가 (좌클릭/우클릭 처리)
+        EventTrigger.Entry clickEntry = new EventTrigger.Entry
+        {
+            eventID = EventTriggerType.PointerClick
+        };
+        clickEntry.callback.AddListener((data) => { OnPointerClickEvent((PointerEventData)data); });
+        eventTrigger.triggers.Add(clickEntry);
 
         // BeginDrag 이벤트 추가
         EventTrigger.Entry beginDragEntry = new EventTrigger.Entry
@@ -92,6 +157,30 @@ public class SummonPieceUI : MonoBehaviour
         };
         endDragEntry.callback.AddListener((data) => { OnEndDragEvent((PointerEventData)data); });
         eventTrigger.triggers.Add(endDragEntry);
+    }
+
+    /// <summary>
+    /// 클릭 이벤트 처리 (좌클릭/우클릭)
+    /// </summary>
+    public void OnPointerClickEvent(PointerEventData eventData)
+    {
+        if (pieceInfo == null) return;
+        
+        // 드래그 중이었다면 클릭으로 처리하지 않음
+        if (isDragging) return;
+        
+        if (eventData.button == PointerEventData.InputButton.Left)
+        {
+            // 좌클릭: 기물 선택/선택해제
+            Debug.Log($"좌클릭: {pieceInfo.pieceName} ({pieceColor})");
+            SummonManager.Instance.SelectPieceForSummon(pieceInfo, pieceColor, this);
+        }
+        else if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            // 우클릭: 선택 해제
+            Debug.Log($"우클릭: 선택 해제");
+            SummonManager.Instance.DeselectPieceForSummon();
+        }
     }
 
     /// <summary>
