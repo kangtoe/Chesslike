@@ -11,30 +11,29 @@ public class SummonPieceUI : MonoBehaviour
     [SerializeField] Image image;
     [SerializeField] PieceColor pieceColor = PieceColor.White;
     
-    [Header("드래그 설정")]
-    [SerializeField] float returnDuration = 0.5f; // 원래 위치로 돌아가는 시간
-    
     [Header("선택 상태 표시")]
     [SerializeField] GameObject selectionIndicator; // 선택 표시 오브젝트 (optional)
-    [SerializeField] Color selectedColor = Color.yellow; // 선택됐을 때 색상
-    [SerializeField] float selectedScale = 1.1f; // 선택됐을 때 크기
     
-    private Vector2 originalAnchoredPosition;
-    private Vector2 dragStartOffset; // 드래그 시작 시 마우스와 UI 사이의 오프셋
-    private bool isDragging = false;
     private bool isSelected = false;
     private EventTrigger eventTrigger;
     private RectTransform rectTransform;
+    
+    // 드래그 관련 변수들
+    private Vector2 originalAnchoredPosition;
+    private Vector2 dragStartOffset;
     private Canvas parentCanvas;
     
     // 원래 상태 저장
     private Color originalColor;
     private Vector3 originalScale;
 
+    // Public 프로퍼티 추가
+    public PieceInfo PieceInfo => pieceInfo;
+    public PieceColor PieceColor => pieceColor;
+
     void Start()
     {
         rectTransform = GetComponent<RectTransform>();
-        originalAnchoredPosition = rectTransform.anchoredPosition;
         originalColor = image != null ? image.color : Color.white;
         originalScale = rectTransform.localScale;
         parentCanvas = GetComponentInParent<Canvas>();
@@ -45,6 +44,14 @@ public class SummonPieceUI : MonoBehaviour
         {
             selectionIndicator.SetActive(false);
         }
+    }
+
+    /// <summary>
+    /// UI 삭제 (외부 호출용)
+    /// </summary>
+    public void DestroySelf()
+    {
+        Destroy(gameObject);
     }
 
     public void SetPieceInfo(PieceInfo pieceInfo, PieceColor pieceColor)
@@ -67,9 +74,9 @@ public class SummonPieceUI : MonoBehaviour
             // 선택 상태 시각적 효과
             if (image != null)
             {
-                image.color = selectedColor;
+                image.color = SummonManager.Instance.SelectedColor;
             }
-            rectTransform.localScale = originalScale * selectedScale;
+            rectTransform.localScale = originalScale * SummonManager.Instance.SelectedScale;
             
             if (selectionIndicator != null)
             {
@@ -126,71 +133,46 @@ public class SummonPieceUI : MonoBehaviour
             eventTrigger = gameObject.AddComponent<EventTrigger>();
         }
 
-        // PointerClick 이벤트 추가 (좌클릭/우클릭 처리)
+        // PointerClick 이벤트 추가 - 직접 SummonManager 바인딩
         EventTrigger.Entry clickEntry = new EventTrigger.Entry
         {
             eventID = EventTriggerType.PointerClick
         };
-        clickEntry.callback.AddListener((data) => { OnPointerClickEvent((PointerEventData)data); });
+        clickEntry.callback.AddListener((data) => { SummonManager.Instance.OnPointerClick((PointerEventData)data); });
         eventTrigger.triggers.Add(clickEntry);
 
-        // BeginDrag 이벤트 추가
+        // BeginDrag 이벤트 추가 - 직접 SummonManager 바인딩
         EventTrigger.Entry beginDragEntry = new EventTrigger.Entry
         {
             eventID = EventTriggerType.BeginDrag
         };
-        beginDragEntry.callback.AddListener((data) => { OnBeginDragEvent((PointerEventData)data); });
+        beginDragEntry.callback.AddListener((data) => { SummonManager.Instance.OnBeginDrag((PointerEventData)data); });
         eventTrigger.triggers.Add(beginDragEntry);
 
-        // Drag 이벤트 추가
+        // Drag 이벤트 추가 - 직접 SummonManager 바인딩
         EventTrigger.Entry dragEntry = new EventTrigger.Entry
         {
             eventID = EventTriggerType.Drag
         };
-        dragEntry.callback.AddListener((data) => { OnDragEvent((PointerEventData)data); });
+        dragEntry.callback.AddListener((data) => { SummonManager.Instance.OnDrag((PointerEventData)data); });
         eventTrigger.triggers.Add(dragEntry);
 
-        // EndDrag 이벤트 추가
+        // EndDrag 이벤트 추가 - 직접 SummonManager 바인딩
         EventTrigger.Entry endDragEntry = new EventTrigger.Entry
         {
             eventID = EventTriggerType.EndDrag
         };
-        endDragEntry.callback.AddListener((data) => { OnEndDragEvent((PointerEventData)data); });
+        endDragEntry.callback.AddListener((data) => { SummonManager.Instance.OnEndDrag((PointerEventData)data); });
         eventTrigger.triggers.Add(endDragEntry);
     }
 
     /// <summary>
-    /// 클릭 이벤트 처리 (좌클릭/우클릭)
+    /// 드래그 초기화 (SummonManager에서 호출)
     /// </summary>
-    public void OnPointerClickEvent(PointerEventData eventData)
+    /// <param name="eventData">이벤트 데이터</param>
+    public void InitializeDrag(PointerEventData eventData)
     {
-        if (pieceInfo == null) return;
-        
-        // 드래그 중이었다면 클릭으로 처리하지 않음
-        if (isDragging) return;
-        
-        if (eventData.button == PointerEventData.InputButton.Left)
-        {
-            // 좌클릭: 기물 선택/선택해제
-            Debug.Log($"좌클릭: {pieceInfo.pieceName} ({pieceColor})");
-            SummonManager.Instance.SelectPieceForSummon(pieceInfo, pieceColor, this);
-        }
-        else if (eventData.button == PointerEventData.InputButton.Right)
-        {
-            // 우클릭: 선택 해제
-            Debug.Log($"우클릭: 선택 해제");
-            SummonManager.Instance.DeselectPieceForSummon();
-        }
-    }
-
-    /// <summary>
-    /// 드래그 시작 이벤트
-    /// </summary>
-    public void OnBeginDragEvent(PointerEventData eventData)
-    {
-        if (pieceInfo == null) return;
-        
-        isDragging = true;
+        // UI 드래그 정보 초기화
         originalAnchoredPosition = rectTransform.anchoredPosition;
         
         // 드래그 시작 시점의 마우스 UI 좌표 계산
@@ -204,18 +186,15 @@ public class SummonPieceUI : MonoBehaviour
             // 마우스 위치와 UI 위치 사이의 오프셋 계산
             dragStartOffset = rectTransform.anchoredPosition - mouseUIPos;
         }
-        
-        Debug.Log($"드래그 시작: {pieceInfo.pieceName}");
     }
 
     /// <summary>
-    /// 드래그 중 이벤트
+    /// 드래그 위치 업데이트 (SummonManager에서 호출)
     /// </summary>
-    public void OnDragEvent(PointerEventData eventData)
+    /// <param name="eventData">이벤트 데이터</param>
+    public void UpdateDragPosition(PointerEventData eventData)
     {
-        if (!isDragging) return;
-        
-        // 마우스 위치를 UI 좌표로 변환
+        // UI 위치 업데이트
         Vector2 mouseUIPos;
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
             parentCanvas.transform as RectTransform, 
@@ -226,51 +205,18 @@ public class SummonPieceUI : MonoBehaviour
             // 드래그 시작 시의 오프셋을 유지하며 UI 위치 업데이트
             rectTransform.anchoredPosition = mouseUIPos + dragStartOffset;
         }
-        
-        // 셀 하이라이트 업데이트
-        BoardManager.Instance.UpdateCellHighlight(eventData.position, pieceInfo, pieceColor);
     }
 
-    /// <summary>
-    /// 드래그 종료 이벤트
-    /// </summary>
-    public void OnEndDragEvent(PointerEventData eventData)
-    {
-        if (!isDragging) return;
-        
-        isDragging = false;
-        
-        // 셀 하이라이트 제거
-        BoardManager.Instance.ClearCellHighlight();
-        
-        // 마우스 위치에서 보드 셀 확인
-        Vector2Int? targetCell = BoardManager.Instance.GetBoardCellFromScreenPosition(eventData.position);
-        
-        if (targetCell.HasValue)
-        {
-            // SummonManager를 통해 기물 소환 시도
-            if (SummonManager.Instance.TrySummonPiece(pieceInfo, targetCell.Value, pieceColor))
-            {
-                Debug.Log($"기물 소환 성공: {pieceInfo.pieceName} ({pieceColor}) at {targetCell.Value}");
-                
-                // UI 삭제
-                Destroy(gameObject);
-                return;
-            }
-        }
-        
-        // 유효하지 않은 위치이므로 원래 위치로 부드럽게 돌아감
-        ReturnToOriginalPosition();
-    }
+
 
     /// <summary>
-    /// 원래 위치로 부드럽게 돌아가기
+    /// 원래 위치로 부드럽게 돌아가기 (SummonManager에서 호출)
     /// </summary>
-    private void ReturnToOriginalPosition()
+    public void ReturnToOriginalPosition()
     {
         Debug.Log("유효하지 않은 위치 - 원래 위치로 돌아감");
         
-        LeanTween.value(gameObject, rectTransform.anchoredPosition, originalAnchoredPosition, returnDuration)
+        LeanTween.value(gameObject, rectTransform.anchoredPosition, originalAnchoredPosition, SummonManager.Instance.ReturnDuration)
             .setEase(LeanTweenType.easeOutQuad)
             .setOnUpdate((Vector2 pos) => {
                 rectTransform.anchoredPosition = pos;

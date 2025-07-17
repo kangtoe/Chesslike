@@ -69,8 +69,7 @@ public class InputManager : MonoSingleton<InputManager>
         // 소환 모드인 경우 선택 해제
         if (SummonManager.Instance.HasSelectedPiece)
         {
-            SummonManager.Instance.DeselectPieceForSummon();
-            Debug.Log("우클릭으로 소환 모드 해제");
+            SummonManager.Instance.OnRightClick();
             return;
         }
 
@@ -96,46 +95,18 @@ public class InputManager : MonoSingleton<InputManager>
     /// </summary>
     void HandleSummonModeClick(RaycastHit hit)
     {
-        if (hit.collider != null)
+        Vector2Int? clickedPosition = InputUtil.GetBoardCoordinateFromHit(hit);
+        
+        if (clickedPosition.HasValue)
         {
-            // BoardCell 클릭 판별
-            var cell = hit.collider.GetComponent<BoardCell>();
-            if (cell != null)
-            {
-                Debug.Log($"소환 모드: 보드 셀 클릭 - 좌표=({cell.CellCoordinate.x}, {cell.CellCoordinate.y})");
-                
-                // 선택된 기물을 해당 위치에 소환 시도
-                bool summoned = SummonManager.Instance.TrySummonSelectedPiece(cell.CellCoordinate);
-                
-                if (summoned)
-                {
-                    Debug.Log($"기물 소환 성공: {cell.CellCoordinate}");
-                }
-                else
-                {
-                    Debug.Log($"기물 소환 실패: {cell.CellCoordinate}");
-                }
-                return;
-            }
-
-            // 기물 클릭 시에도 소환 시도 (기물이 있는 위치는 소환 불가능하지만 시도는 해봄)
-            var piece = hit.collider.GetComponent<DeployedPiece>();
-            if (piece != null)
-            {
-                Debug.Log($"소환 모드: 기물 위치 클릭 - 좌표=({piece.CellCoordinate})");
-                bool summoned = SummonManager.Instance.TrySummonSelectedPiece(piece.CellCoordinate);
-                
-                if (!summoned)
-                {
-                    Debug.Log("이미 기물이 배치된 위치입니다.");
-                }
-                return;
-            }
+            // 유효한 보드 위치 클릭 - 소환 시도
+            SummonManager.Instance.OnBoardClick(clickedPosition.Value);
         }
-
-        // 빈 공간 클릭 시 소환 모드 해제
-        Debug.Log("소환 모드: 빈 공간 클릭 - 소환 모드 해제");
-        SummonManager.Instance.DeselectPieceForSummon();
+        else
+        {
+            // 보드 밖 클릭 - 소환 모드 해제
+            SummonManager.Instance.OnRightClick();
+        }
     }
 
     /// <summary>
@@ -159,12 +130,12 @@ public class InputManager : MonoSingleton<InputManager>
 
             if(selectedPiece != null)
             {
-                // BoardCell 클릭 판별
-                var cell = hit.collider.GetComponent<BoardCell>();
-                if (cell != null)
+                // 클릭한 위치의 보드 좌표 가져오기
+                Vector2Int? clickedPosition = InputUtil.GetBoardCoordinateFromHit(hit);
+                if (clickedPosition.HasValue)
                 {
-                    Debug.Log($"보드 셀 클릭: 좌표=({cell.CellCoordinate.x}, {cell.CellCoordinate.y})");                        
-                    bool isMoved = PieceManager.Instance.MovePiece(cell.CellCoordinate);
+                    Debug.Log($"보드 셀 클릭: 좌표=({clickedPosition.Value.x}, {clickedPosition.Value.y})");                        
+                    bool isMoved = PieceManager.Instance.MovePiece(clickedPosition.Value);
                     if(!isMoved)
                     {
                         PieceManager.Instance.DeselectPiece();
