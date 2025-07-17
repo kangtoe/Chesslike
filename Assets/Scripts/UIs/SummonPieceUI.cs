@@ -47,6 +47,14 @@ public class SummonPieceUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// UI 삭제 (외부 호출용)
+    /// </summary>
+    public void DestroySelf()
+    {
+        Destroy(gameObject);
+    }
+
     public void SetPieceInfo(PieceInfo pieceInfo, PieceColor pieceColor)
     {
         this.pieceInfo = pieceInfo;
@@ -177,8 +185,8 @@ public class SummonPieceUI : MonoBehaviour
         }
         else if (eventData.button == PointerEventData.InputButton.Right)
         {
-            // 우클릭: 선택 해제
-            Debug.Log($"우클릭: 선택 해제");
+            // 우클릭: 소환 모드 해제 (InputManager와 동일한 동작)
+            Debug.Log($"UI 우클릭: 소환 모드 해제");
             SummonManager.Instance.DeselectPieceForSummon();
         }
     }
@@ -248,19 +256,25 @@ public class SummonPieceUI : MonoBehaviour
         
         if (targetCell.HasValue)
         {
-            // SummonManager를 통해 기물 소환 시도
-            if (SummonManager.Instance.TrySummonPiece(pieceInfo, targetCell.Value, pieceColor))
+            // 직접 소환 메서드 사용 (드래그 방식)
+            bool success = SummonManager.Instance.TrySummonPiece(pieceInfo, targetCell.Value, pieceColor);
+            
+            if (success)
             {
-                Debug.Log($"기물 소환 성공: {pieceInfo.pieceName} ({pieceColor}) at {targetCell.Value}");
-                
-                // UI 삭제
-                Destroy(gameObject);
-                return;
+                // 성공 시 UI 직접 삭제
+                DestroySelf();
+            }
+            else
+            {
+                // 실패 시 원래 위치로 복귀
+                ReturnToOriginalPosition();
             }
         }
-        
-        // 유효하지 않은 위치이므로 원래 위치로 부드럽게 돌아감
-        ReturnToOriginalPosition();
+        else
+        {
+            // 유효하지 않은 위치 (보드 밖)이므로 원래 위치로 복귀
+            ReturnToOriginalPosition();
+        }
     }
 
     /// <summary>

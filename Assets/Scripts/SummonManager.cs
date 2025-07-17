@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public class SummonManager : MonoSingleton<SummonManager>
 {
@@ -27,6 +28,7 @@ public class SummonManager : MonoSingleton<SummonManager>
     public bool HasSelectedPiece => selectedPieceInfo != null;
     public PieceInfo SelectedPieceInfo => selectedPieceInfo;
     public PieceColor SelectedPieceColor => selectedPieceColor;
+    public SummonPieceUI SelectedPieceUI => selectedPieceUI;
 
     void Start()
     {
@@ -94,35 +96,7 @@ public class SummonManager : MonoSingleton<SummonManager>
     }
 
     /// <summary>
-    /// 선택된 기물을 지정된 위치에 소환 시도 (클릭 방식용)
-    /// </summary>
-    /// <param name="targetPosition">목표 위치</param>
-    /// <returns>소환 성공 여부</returns>
-    public bool TrySummonSelectedPiece(Vector2Int targetPosition)
-    {
-        if (!HasSelectedPiece)
-        {
-            Debug.Log("선택된 기물이 없습니다.");
-            return false;
-        }
-
-        bool success = TrySummonPiece(selectedPieceInfo, targetPosition, selectedPieceColor);
-        
-        if (success)
-        {
-            // 성공시 UI 제거 및 선택 해제
-            if (selectedPieceUI != null)
-            {
-                Destroy(selectedPieceUI.gameObject);
-            }
-            DeselectPieceForSummon();
-        }
-
-        return success;
-    }
-
-    /// <summary>
-    /// 지정된 위치에 기물 소환 시도
+    /// 기본 소환 로직 - 모든 소환 방식의 핵심 로직
     /// </summary>
     /// <param name="pieceInfo">소환할 기물 정보</param>
     /// <param name="targetPosition">목표 위치</param>
@@ -130,7 +104,11 @@ public class SummonManager : MonoSingleton<SummonManager>
     /// <returns>소환 성공 여부</returns>
     public bool TrySummonPiece(PieceInfo pieceInfo, Vector2Int targetPosition, PieceColor pieceColor)
     {
-        if (pieceInfo == null) return false;
+        if (pieceInfo == null) 
+        {
+            Debug.LogWarning("소환할 기물 정보가 없습니다.");
+            return false;
+        }
 
         // 현재 턴 플레이어의 기물인지 확인
         if (!TurnManager.Instance.IsPlayerTurn) return false;
@@ -148,9 +126,37 @@ public class SummonManager : MonoSingleton<SummonManager>
         // 기물 배치
         bool success = PieceManager.Instance.DeployPiece(pieceInfo, targetPosition, pieceColor);
         
+        return success;
+    }
+
+    /// <summary>
+    /// 선택된 기물을 지정된 위치에 소환 시도 (클릭 방식)
+    /// 성공 시 선택 정보를 초기화하고 UI 삭제
+    /// </summary>
+    /// <param name="targetPosition">목표 위치</param>
+    /// <returns>소환 성공 여부</returns>
+    public bool TrySummonSelectedPiece(Vector2Int targetPosition)
+    {
+        if (!HasSelectedPiece)
+        {
+            Debug.Log("선택된 기물이 없습니다.");
+            return false;
+        }
+
+        // 삭제할 UI 미리 저장
+        var uiToDestroy = selectedPieceUI;
+        
+        bool success = TrySummonPiece(selectedPieceInfo, targetPosition, selectedPieceColor);
+        
         if (success)
         {
-            //OnPieceSummoned(pieceInfo, targetPosition, pieceColor);
+            // 성공 시 선택 정보 초기화
+            selectedPieceInfo = null;
+            selectedPieceColor = PieceColor.White;
+            selectedPieceUI = null;
+            
+            // UI 직접 삭제
+            uiToDestroy.DestroySelf();
         }
 
         return success;
