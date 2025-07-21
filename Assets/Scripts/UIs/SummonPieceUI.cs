@@ -20,8 +20,6 @@ public class SummonPieceUI : MonoBehaviour
     
     // 드래그 관련 변수들
     private Vector2 originalAnchoredPosition;
-    private Vector2 dragStartOffset;
-    private Canvas parentCanvas;
     
     // 원래 상태 저장
     private Color originalColor;
@@ -36,7 +34,6 @@ public class SummonPieceUI : MonoBehaviour
         rectTransform = GetComponent<RectTransform>();
         originalColor = image != null ? image.color : Color.white;
         originalScale = rectTransform.localScale;
-        parentCanvas = GetComponentInParent<Canvas>();
         SetupEventTrigger();
         
         // 선택 표시 오브젝트 초기화
@@ -174,18 +171,6 @@ public class SummonPieceUI : MonoBehaviour
     {
         // UI 드래그 정보 초기화
         originalAnchoredPosition = rectTransform.anchoredPosition;
-        
-        // 드래그 시작 시점의 마우스 UI 좌표 계산
-        Vector2 mouseUIPos;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            parentCanvas.transform as RectTransform, 
-            eventData.position, 
-            parentCanvas.worldCamera, 
-            out mouseUIPos))
-        {
-            // 마우스 위치와 UI 위치 사이의 오프셋 계산
-            dragStartOffset = rectTransform.anchoredPosition - mouseUIPos;
-        }
     }
 
     /// <summary>
@@ -194,16 +179,11 @@ public class SummonPieceUI : MonoBehaviour
     /// <param name="eventData">이벤트 데이터</param>
     public void UpdateDragPosition(PointerEventData eventData)
     {
-        // UI 위치 업데이트
-        Vector2 mouseUIPos;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            parentCanvas.transform as RectTransform, 
-            eventData.position, 
-            parentCanvas.worldCamera, 
-            out mouseUIPos))
+        // 단순하게 스크린 좌표를 월드 좌표로 변환 후 UI 위치 설정
+        Vector3 worldPosition;
+        if (RectTransformUtility.ScreenPointToWorldPointInRectangle(rectTransform, eventData.position, null, out worldPosition))
         {
-            // 드래그 시작 시의 오프셋을 유지하며 UI 위치 업데이트
-            rectTransform.anchoredPosition = mouseUIPos + dragStartOffset;
+            rectTransform.position = worldPosition;
         }
     }
 
