@@ -200,7 +200,7 @@ public class PieceManager : MonoSingleton<PieceManager>
         Debug.Log($"기물 이동: {fromCoordinate} → {toCoordinate}");
         
         // 이동 완료 후 턴 전환
-        TurnManager.Instance.NextTurn();
+        GameManager.Instance.NextTurn();
     }
 
     public bool RemovePiece(Vector2Int cellCoordinate)

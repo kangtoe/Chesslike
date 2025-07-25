@@ -134,7 +134,7 @@ GameObject:
   - component: {fileID: 20527033}
   - component: {fileID: 20527034}
   m_Layer: 0
-  m_Name: TurnManager
+  m_Name: GameManager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -169,6 +169,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _currentTurn: 1
   _turnCount: 0
+  _gameState: 0
 --- !u!1 &31422595
 GameObject:
   m_ObjectHideFlags: 0
@@ -219,6 +220,8 @@ MonoBehaviour:
   boardCellPrefab: {fileID: 7332542248030645601, guid: 3a56600579eb4dd43ab6b3df3f9e38e7, type: 3}
   lightCellColor: {r: 1, g: 1, b: 1, a: 1}
   darkCellColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  validPlacementColor: {r: 0, g: 1, b: 0, a: 1}
+  invalidPlacementColor: {r: 1, g: 0, b: 0, a: 1}
 --- !u!1 &194929456
 GameObject:
   m_ObjectHideFlags: 0
@@ -274,6 +277,13 @@ MonoBehaviour:
   blackSummonPieceParent: {fileID: 641764579}
   whiteSummonPieceParent: {fileID: 758471292}
   summonPiecePrefab: {fileID: 4134834749427117998, guid: 71926f1b9f16c5c489d7eab4640fc6f1, type: 3}
+  selectedPieceInfo: {fileID: 0}
+  selectedPieceColor: 0
+  selectedPieceUI: {fileID: 0}
+  isDragging: 0
+  returnDuration: 0.5
+  selectedColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  selectedScale: 1.1
 --- !u!1 &378812212
 GameObject:
   m_ObjectHideFlags: 0

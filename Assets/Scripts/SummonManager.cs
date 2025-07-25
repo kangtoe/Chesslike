@@ -305,7 +305,7 @@ public class SummonManager : MonoSingleton<SummonManager>
         }
 
         // 현재 턴 플레이어의 기물인지 확인
-        if (!TurnManager.Instance.IsPlayerTurn) return false;
+        if (!GameManager.Instance.IsPlayerTurn) return false;
 
         // 유효성 검사
         if (!PieceManager.Instance.IsValidPlacementPosition(targetPosition))

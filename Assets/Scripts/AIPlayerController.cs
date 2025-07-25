@@ -14,14 +14,14 @@ public class AIPlayerController : MonoSingleton<AIPlayerController>
     private void Start()
     {
         // TurnManager의 턴 변경 이벤트 구독
-        TurnManager.Instance.OnTurnChanged += OnTurnChanged;
+        GameManager.Instance.OnTurnChanged += OnTurnChanged;
     }
     
     private void OnDestroy()
     {
         // 이벤트 구독 해제
-        if (TurnManager.Instance != null)
-            TurnManager.Instance.OnTurnChanged -= OnTurnChanged;
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnTurnChanged -= OnTurnChanged;
     }
     
     /// <summary>
