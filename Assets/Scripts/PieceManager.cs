@@ -220,5 +220,22 @@ public class PieceManager : MonoSingleton<PieceManager>
     }
     #endregion 피스 제어
 
+    /// <summary>
+    /// 특정 색상의 킹을 찾습니다
+    /// </summary>
+    /// <param name="color">킹의 색상</param>
+    /// <returns>킹 기물 (찾지 못하면 null)</returns>
+    public DeployedPiece FindKing(PieceColor color)
+    {
+        foreach (var piece in deployedPieces.Values)
+        {
+            if (piece.PieceColor == color && piece.PieceInfo.pieceName.ToLower().Contains("king"))
+            {
+                return piece;
+            }
+        }
+
+        return null;
+    }
 
 }
