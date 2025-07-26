@@ -24,12 +24,12 @@ public class GameManager : MonoSingleton<GameManager>
     [SerializeField] GameState _gameState = GameState.NotStarted;
     public GameState CurrentGameState => _gameState;
 
+    public bool IsPlaying => _gameState == GameState.Playing;
     public bool IsPlayerTurn => _currentTurn == PieceColor.White;
     
     // 이벤트
     public event Action<PieceColor> OnTurnChanged;
     public event Action<PieceColor?> OnGameEnded;
-    public event Action<ChessGameState> OnChessGameStateChanged; // 체크/체크메이트 상태 변경 이벤트
 
     // 체크메이트 검증기
     private GameStateValidator gameStateValidator;
@@ -38,12 +38,8 @@ public class GameManager : MonoSingleton<GameManager>
     void Start()
     {
         gameStateValidator = GameStateValidator.Instance;
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        StartGame();
     }
 
     [NaughtyAttributes.Button]
@@ -60,6 +56,9 @@ public class GameManager : MonoSingleton<GameManager>
 
         // 체크/체크메이트 상태 확인
         CheckGameStateAfterTurn();
+
+        // 체스 게임 상태 변경 이벤트 발생
+        //if(IsPlaying) OnChessGameStateChanged?.Invoke(chessState);
     }
 
     /// <summary>
@@ -70,67 +69,58 @@ public class GameManager : MonoSingleton<GameManager>
         if (gameStateValidator == null || _gameState != GameState.Playing)
             return;
 
-        // 현재 보드 상태의 FEN을 생성 (이 부분은 BoardManager나 PieceManager에서 구현 필요)
-        string currentFEN = GetCurrentBoardFEN();
+        // 현재 보드 상태의 FEN을 생성
+        string currentFEN = ChessNotationUtil.GenerateFEN();
         
         if (!string.IsNullOrEmpty(currentFEN))
         {
-            ChessGameState chessState = gameStateValidator.CheckGameState(currentFEN, _currentTurn);
+            List<DeployedPiece> attackingPieces;
+            ChessGameState chessState = gameStateValidator.CheckGameState(currentFEN, _currentTurn, out attackingPieces);
             
+            string message = "";
+            Color color = Color.white;
+
             // 체크메이트나 스테일메이트 상태일 경우 게임 종료
-            if (chessState == ChessGameState.Checkmate)
+            switch (chessState)
             {
-                PieceColor winner = _currentTurn == PieceColor.White ? PieceColor.Black : PieceColor.White;
-                EndGame(winner);
-                
-                string message = $"{gameStateValidator.GetGameStateString(chessState)}! {winner} 승리!";
-                Text3dMaker.Instance.MakeText(message, BoardManager.Instance.BoardCenter, Color.red);
-            }
-            else if (chessState == ChessGameState.Stalemate)
-            {
-                EndGame(null); // 무승부
-                
-                string message = $"{gameStateValidator.GetGameStateString(chessState)}! 무승부!";
-                Text3dMaker.Instance.MakeText(message, BoardManager.Instance.BoardCenter, Color.yellow);
-            }
-                         else if (chessState == ChessGameState.Check)
-             {
-                 string message = $"{_currentTurn} {gameStateValidator.GetGameStateString(chessState)}!";
-                 Text3dMaker.Instance.MakeText(message, BoardManager.Instance.BoardCenter, new Color(1f, 0.5f, 0f)); // 오렌지색
-             }
+                case ChessGameState.Checkmate:
+                    PieceColor winner = _currentTurn == PieceColor.White ? PieceColor.Black : PieceColor.White;
+                    EndGame(winner);
+                    
+                    message = $"{chessState}! {winner} Wins!";
+                    color = Color.red;
+                    break;
+                case ChessGameState.Stalemate:
+                    EndGame(null);
+                    
+                    message = $"{chessState}! Draw!";
+                    color = Color.yellow;
+                    break;
+                case ChessGameState.Check:
+                    message = $"{_currentTurn} in {chessState}!";
+                    color = new Color(1f, 0.5f, 0f); // 오렌지색
 
-            // 체스 게임 상태 변경 이벤트 발생
-            OnChessGameStateChanged?.Invoke(chessState);
+                    message += $"\nAttacked by: {attackingPieces.Count} pieces";
+                    if (attackingPieces != null && attackingPieces.Count > 0)
+                    {                                                
+                        // 공격하는 기물 정보를 메시지에 추가
+                        string attackInfo = "";
+                        foreach (var piece in attackingPieces)
+                        {
+                            Debug.Log($"- {piece.PieceInfo.pieceName} at {piece.CellCoordinate}");
+                            if (!string.IsNullOrEmpty(attackInfo)) attackInfo += ", ";
+                            attackInfo += $"{piece.PieceInfo.pieceName}";
+                        }
+                        
+                        message += $"\nAttacked by: {attackInfo}";
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            Text3dMaker.Instance.MakeText(message, BoardManager.Instance.BoardCenter, color);        
         }
-    }
-
-    /// <summary>
-    /// 현재 보드 상태를 FEN 문자열로 반환합니다
-    /// TODO: BoardManager나 PieceManager에서 구현해야 할 메서드
-    /// </summary>
-    /// <returns>현재 보드의 FEN 문자열</returns>
-    private string GetCurrentBoardFEN()
-    {
-        // 이 메서드는 BoardManager나 PieceManager에서 구현해야 합니다
-        // 현재는 임시로 빈 문자열을 반환합니다
-        Debug.LogWarning("GetCurrentBoardFEN 메서드가 구현되지 않았습니다. BoardManager나 PieceManager에서 구현이 필요합니다.");
-        return "";
-    }
-
-    /// <summary>
-    /// 현재 체스 게임 상태를 확인합니다 (외부에서 호출 가능)
-    /// </summary>
-    /// <returns>현재 체스 게임 상태</returns>
-    public ChessGameState GetCurrentChessGameState()
-    {
-        if (gameStateValidator == null || _gameState != GameState.Playing)
-            return ChessGameState.Normal;
-
-        string currentFEN = GetCurrentBoardFEN();
-        if (string.IsNullOrEmpty(currentFEN))
-            return ChessGameState.Normal;
-
-        return gameStateValidator.CheckGameState(currentFEN, _currentTurn);
     }
 
     #region 게임 흐름 제어
