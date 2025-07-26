@@ -290,6 +290,11 @@ public class BoardManager : MonoSingleton<BoardManager>
                 Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
                 new Vector2Int(1,1), new Vector2Int(1,-1), new Vector2Int(-1,1), new Vector2Int(-1,-1)
             };
+            
+            // 킹의 후보 이동 위치들을 먼저 계산
+            List<Vector2Int> candidateMovableCells = new List<Vector2Int>();
+            List<Vector2Int> candidateAttackCells = new List<Vector2Int>();
+            
             foreach (var dir in kingMoves)
             {
                 Vector2Int next = start + dir;
@@ -300,15 +305,32 @@ public class BoardManager : MonoSingleton<BoardManager>
                     // 기물이 있는 경우
                     if (targetPiece.PieceColor != piece.PieceColor)
                     {
-                        // 적 기물이면 공격 가능
-                        _attackCells.Add(next);
+                        // 적 기물이면 공격 가능 (후보)
+                        candidateAttackCells.Add(next);
                     }
                     // 아군 기물이면 이동 불가 (continue)
                 }
                 else
                 {
-                    // 빈 칸이면 이동 가능
-                    _movableCells.Add(next);
+                    // 빈 칸이면 이동 가능 (후보)
+                    candidateMovableCells.Add(next);
+                }
+            }
+            
+            // 각 후보 위치에 대해 안전한지 확인 (GameStateValidator 활용)
+            foreach (var candidatePos in candidateMovableCells)
+            {
+                if (GameStateValidator.Instance.IsKingMoveToPositionSafe(piece, candidatePos))
+                {
+                    _movableCells.Add(candidatePos);
+                }
+            }
+            
+            foreach (var candidatePos in candidateAttackCells)
+            {
+                if (GameStateValidator.Instance.IsKingMoveToPositionSafe(piece, candidatePos))
+                {
+                    _attackCells.Add(candidatePos);
                 }
             }
         }
@@ -316,8 +338,6 @@ public class BoardManager : MonoSingleton<BoardManager>
         movableCells = new List<Vector2Int>(_movableCells);
         attackCells = new List<Vector2Int>(_attackCells);
     }
-
-
 
     #region 셀 하이라이트 기능
 

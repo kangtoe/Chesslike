@@ -150,4 +150,54 @@ public class GameStateValidator : MonoSingleton<GameStateValidator>
         return IsInCheck(currentPlayer, out attackingPieces);
     }
 
+    /// <summary>
+    /// 킹의 특정 위치로의 이동이 안전한지 직접 확인합니다 (순환 호출 방지)
+    /// </summary>
+    /// <param name="king">킹 기물</param>
+    /// <param name="targetPosition">이동할 위치</param>
+    /// <returns>안전하면 true, 체크 상태가 되면 false</returns>
+    public bool IsKingMoveToPositionSafe(DeployedPiece king, Vector2Int targetPosition)
+    {
+        // 상대방 색상
+        PieceColor opponentColor = king.PieceColor == PieceColor.White ? PieceColor.Black : PieceColor.White;
+        
+        // 모든 상대 기물들이 킹의 새 위치를 공격할 수 있는지 확인
+        foreach (var piece in PieceManager.DeployedPieces.Values)
+        {
+            // 킹 자신과 제거될 기물은 제외, 상대방 기물만 확인
+            if (piece.PieceColor == opponentColor && 
+                piece != king && 
+                piece.CellCoordinate != targetPosition &&
+                !piece.PieceInfo.pieceName.ToLower().Contains("king")) // 상대 킹은 제외 (인접성은 별도 확인)
+            {
+                // 기존 GetMovableCells를 활용하여 이 기물이 공격할 수 있는 위치들을 가져옴
+                List<Vector2Int> movableCells, attackCells;
+                BoardManager.Instance.GetMovableCells(piece, out movableCells, out attackCells);
+                
+                // 킹의 새 위치가 이동 가능하거나 공격 가능한 위치에 포함되는지 확인
+                bool canMoveToTarget = movableCells != null && movableCells.Contains(targetPosition);
+                bool canAttackTarget = attackCells != null && attackCells.Contains(targetPosition);
+                
+                if (canMoveToTarget || canAttackTarget)
+                {
+                    return false; // 공격받을 수 있으므로 안전하지 않음
+                }
+            }
+        }
+        
+        // 상대 킹과의 인접성 확인 (킹끼리는 인접할 수 없음)
+        DeployedPiece opponentKing = PieceManager.FindKing(opponentColor);
+        if (opponentKing != null)
+        {
+            int distanceX = Mathf.Abs(targetPosition.x - opponentKing.CellCoordinate.x);
+            int distanceY = Mathf.Abs(targetPosition.y - opponentKing.CellCoordinate.y);
+            if (distanceX <= 1 && distanceY <= 1)
+            {
+                return false; // 킹끼리 인접하면 안전하지 않음
+            }
+        }
+        
+        return true; // 안전함
+    }
+
 } 
