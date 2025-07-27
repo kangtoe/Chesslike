@@ -3,7 +3,7 @@ using UnityEngine;
 using Debug = UnityEngine.Debug;
 using System.IO;
 
-public class CustomPieceRegister : MonoBehaviour
+public class FairyStockfishIniGenerator : MonoBehaviour
 {    
     [SerializeField] List<PieceInfo> customPieces = new List<PieceInfo>();
 
