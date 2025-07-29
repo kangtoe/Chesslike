@@ -86,8 +86,22 @@ public class FairyStockfishIniGenerator : MonoBehaviour
         
         List<string> lines = new List<string>();
         
-        // [chesslike:chess] 섹션 추가
-        lines.Add("[chesslike]");
+        // [chesslike:crazyhouse] 섹션 추가 (크레이지 하우스 룰)
+        lines.Add("[chesslike:crazyhouse]");
+        
+        // 크레이지 하우스 기본 설정
+        // lines.Add("capturesToHand = true");  // 잡은 기물을 손에 가져옴 - 비활성화
+        lines.Add("pieceDrops = true");      // 기물을 보드에 배치할 수 있음
+        lines.Add("pocketSize = 8");         // 손에 가질 수 있는 기물 수 (각 종류당)
+        
+        // 시작 FEN 설정
+        // 크레이지 하우스: 손에 있는 기물을 빈 칸에 배치(드롭/소환) 가능
+        // 킹만 보드에 배치 (게임 종료 조건 유지)
+        string boardState = "8/8/8/8/8/8/8/8";
+        string pocketPieces = SummonManager.Instance.AiStartPocketPieces;        
+        lines.Add($"startFen = {boardState}[{pocketPieces}] w - - 0 1");        
+        
+        lines.Add("");  // 빈 줄 추가
         
         // 커스텀 피스들 추가
         for (int i = 0; i < customPieces.Count; i++)
@@ -103,6 +117,6 @@ public class FairyStockfishIniGenerator : MonoBehaviour
         // 파일에 쓰기
         File.WriteAllLines(iniFilePath, lines);
         
-        Debug.Log($"ini 파일이 새로 생성되었습니다. {customPieces.Count}개의 커스텀 피스가 추가되었습니다.");
+        Debug.Log($"변형 룰이 적용된 ini 파일이 생성되었습니다. {customPieces.Count}개의 커스텀 피스가 추가되었습니다.");
     }
 } 

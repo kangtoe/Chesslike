@@ -8,7 +8,10 @@ public class SummonManager : MonoSingleton<SummonManager>
 {
     [Header("Summon Piece UI")]
     [SerializeField] PieceInfo[] blackSummonPieceInfos;
-    [SerializeField] PieceInfo[] whiteSummonPieceInfos;    
+    [SerializeField] PieceInfo[] whiteSummonPieceInfos;
+    
+    // AI 포켓 초기화를 위한 public 프로퍼티
+    public PieceInfo[] BlackSummonPieceInfos => blackSummonPieceInfos;    
     
     [Header("Summon Piece UI Parent")]
     [SerializeField] Transform blackSummonPieceParent;
@@ -49,6 +52,16 @@ public class SummonManager : MonoSingleton<SummonManager>
     public PieceInfo SelectedPieceInfo => selectedPieceInfo;
     public PieceColor SelectedPieceColor => selectedPieceColor;
     public SummonPieceUI SelectedPieceUI => selectedPieceUI;
+    
+    string aiStartPocketPieces = "";
+    public string AiStartPocketPieces{
+        get{
+            if(aiStartPocketPieces == ""){
+                UpdateAIPocketPieces();
+            }
+            return aiStartPocketPieces;
+        }
+    }
 
     void Start()
     {
@@ -354,5 +367,26 @@ public class SummonManager : MonoSingleton<SummonManager>
         return success;
     }
 
+    void UpdateAIPocketPieces()
+    {
+        aiStartPocketPieces = "";
 
+        // 모든 기물 하나씩 추가
+        // foreach (var piece in customPieces)
+        // {
+        //     if (piece != null)
+        //     {
+        //         aiStartPocketPieces += piece.pieceAlphabet;
+        //     }
+        // }
+
+        // SummonManager의 흑 소환 기물로 초기화
+        foreach (var piece in blackSummonPieceInfos)
+        {
+            if (piece != null)
+            {
+                aiStartPocketPieces += piece.pieceAlphabet;
+            }
+        }
+    }
 }
