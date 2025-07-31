@@ -332,6 +332,11 @@ public class SummonManager : MonoSingleton<SummonManager>
 
         // 기물 배치
         bool success = PieceManager.Instance.DeployPiece(pieceInfo, targetPosition, pieceColor);
+        if (success)
+        {
+            // 소환 완료 후 턴 전환
+            GameManager.Instance.TryAdvanceTurn();
+        }
         
         return success;
     }

@@ -6,6 +6,7 @@ using System;
 public enum GameState
 {
     NotStarted,
+    StartDeploying,
     Playing,
     Paused,
     GameOver
@@ -39,12 +40,13 @@ public class GameManager : MonoSingleton<GameManager>
     {
         gameStateValidator = GameStateValidator.Instance;
 
-        StartGame();
+        StartDeploying();
     }
-
-    [NaughtyAttributes.Button]
-    public void NextTurn()
+    
+    public void TryAdvanceTurn()
     {
+        if (_gameState != GameState.Playing) return;
+
         _turnCount++;
         _currentTurn = _currentTurn == PieceColor.White ? PieceColor.Black : PieceColor.White;
 
@@ -124,7 +126,13 @@ public class GameManager : MonoSingleton<GameManager>
     }
 
     #region 게임 흐름 제어
-    public void StartGame() { 
+    public void StartDeploying() { 
+        _gameState = GameState.StartDeploying;
+    }
+    [NaughtyAttributes.Button]
+    public void StartGame() {
+        if (_gameState != GameState.StartDeploying) return;            
+
         _gameState = GameState.Playing;
     }
     public void PauseGame() { 
