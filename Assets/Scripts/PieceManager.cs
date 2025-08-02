@@ -101,7 +101,11 @@ public class PieceManager : MonoSingleton<PieceManager>
             return false;
         }
 
-        if(!IsValidPlacementPosition(cellCoordinate)) return false;
+        if(!IsValidPlacementPosition(cellCoordinate))
+        {
+            Debug.LogWarning($"Invalid cell coordinate: {cellCoordinate}");
+            return false;
+        }
 
         BoardCell cell = BoardManager.Instance.GetCell(cellCoordinate);
         DeployedPiece piece = Instantiate(_piecePrefab, _pieceRoot.transform);
