@@ -64,10 +64,70 @@ public class AIPlayerController : MonoSingleton<AIPlayerController>
             yield break;
         }
         
-        // 체스 표기법을 좌표로 변환
-        if (!ChessNotationUtil.TryParseChessNotation(bestMove, out Vector2Int fromCoord, out Vector2Int toCoord))
+        // 소환 명령어인지 확인
+        if (ChessNotationUtil.IsSummonNotation(bestMove))
         {
-            Debug.LogError($"잘못된 이동 표기법: {bestMove}");
+            // 소환 명령어 처리
+            yield return StartCoroutine(ExecuteAISummon(bestMove));
+        }
+        else
+        {
+            // 일반 이동 명령어 처리 (PieceManager에서 턴 넘김)
+            yield return StartCoroutine(ExecuteAIMovePiece(bestMove));
+        }
+    }
+
+    /// <summary>
+    /// AI 소환을 실행합니다. (향상된 버전 - 시각적 피드백 포함)
+    /// </summary>
+    /// <param name="summonNotation">소환 표기법 (예: "P@e4")</param>
+    private IEnumerator ExecuteAISummon(string summonNotation)
+    {
+        // 소환 표기법 파싱
+        if (!ChessNotationUtil.TryParseSummonNotation(summonNotation, out char pieceSymbol, out Vector2Int targetCoord))
+        {
+            Debug.LogError($"잘못된 소환 표기법: {summonNotation}");
+            yield break;
+        }
+
+        // AI 색상에 맞는 기물 정보 찾기
+        PieceInfo pieceInfo = SummonManager.Instance.FindPieceInfoBySymbol(pieceSymbol, aiColor);
+        if (pieceInfo == null)
+        {
+            Debug.LogError($"AI 색상에 맞는 기물 정보를 찾을 수 없습니다: {pieceSymbol}");
+            yield break;
+        }
+
+        // 시각적 피드백과 함께 소환 실행
+        yield return StartCoroutine(ExecuteAISummonWithFeedback(pieceInfo, targetCoord, summonNotation));
+    }
+
+    /// <summary>
+    /// AI 소환을 시각적 피드백과 함께 실행합니다.
+    /// </summary>
+    /// <param name="pieceInfo">소환할 기물 정보</param>
+    /// <param name="targetCoord">목표 좌표</param>
+    /// <param name="summonNotation">원본 소환 표기법 (로깅용)</param>
+    private IEnumerator ExecuteAISummonWithFeedback(PieceInfo pieceInfo, Vector2Int targetCoord, string summonNotation)
+    {
+        Debug.Log($"AI 소환 시작 (피드백 포함): {summonNotation}");
+        
+        // 시각적 피드백과 함께 소환 실행
+        yield return StartCoroutine(SummonManager.Instance.TrySummonPieceWithAIFeedback(pieceInfo, targetCoord, aiColor));
+        
+        Debug.Log($"AI 소환 완료 (피드백 포함): {summonNotation}");
+    }
+
+    /// <summary>
+    /// AI 기물 이동을 실행합니다.
+    /// </summary>
+    /// <param name="moveNotation">이동 표기법 (예: "e2e4")</param>
+    private IEnumerator ExecuteAIMovePiece(string moveNotation)
+    {
+        // 체스 표기법을 좌표로 변환
+        if (!ChessNotationUtil.TryParseChessNotation(moveNotation, out Vector2Int fromCoord, out Vector2Int toCoord))
+        {
+            Debug.LogError($"잘못된 이동 표기법: {moveNotation}");
             yield break;
         }
         
