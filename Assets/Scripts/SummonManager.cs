@@ -7,11 +7,12 @@ using UnityEngine.EventSystems; // PointerEventData 사용을 위해 추가
 public class SummonManager : MonoSingleton<SummonManager>
 {
     [Header("Summon Piece UI")]
-    [SerializeField] PieceInfo[] blackSummonPieceInfos;
-    [SerializeField] PieceInfo[] whiteSummonPieceInfos;
+    [SerializeField] List<PieceInfo> blackSummonPieceInfos;
+    [SerializeField] List<PieceInfo> whiteSummonPieceInfos;
     
     // AI 포켓 초기화를 위한 public 프로퍼티
-    public PieceInfo[] BlackSummonPieceInfos => blackSummonPieceInfos;    
+    public List<PieceInfo> BlackSummonPieceInfos => blackSummonPieceInfos;    
+    public List<PieceInfo> WhiteSummonPieceInfos => whiteSummonPieceInfos;    
     
     [Header("Summon Piece UI Parent")]
     [SerializeField] Transform blackSummonPieceParent;
@@ -40,6 +41,11 @@ public class SummonManager : MonoSingleton<SummonManager>
     [SerializeField] Color selectedColor = Color.yellow; // 선택됐을 때 색상
     [SerializeField] float selectedScale = 1.1f; // 선택됐을 때 크기
     
+    [Header("AI 시각적 피드백 설정")]
+    [SerializeField] bool showAISelectionProcess = true; // AI 선택 과정을 시각적으로 표시할지 여부
+    [SerializeField] float aiSelectionDuration = 0.3f; // AI 기물 선택 표시 시간
+    [SerializeField] float aiHighlightDuration = 0.2f; // AI 목표 위치 하이라이트 시간
+    
     // 드래그 설정 프로퍼티
     public float ReturnDuration => returnDuration;
     
@@ -52,24 +58,37 @@ public class SummonManager : MonoSingleton<SummonManager>
     public PieceInfo SelectedPieceInfo => selectedPieceInfo;
     public PieceColor SelectedPieceColor => selectedPieceColor;
     public SummonPieceUI SelectedPieceUI => selectedPieceUI;
-    
-    string aiStartPocketPieces = "";
-    public string AiStartPocketPieces{
-        get{
-            if(aiStartPocketPieces == ""){
-                UpdateAIPocketPieces();
-            }
-            return aiStartPocketPieces;
-        }
-    }
 
     void Start()
     {
+        RefreshSummonUI();
+    }
+    
+    /// <summary>
+    /// 소환 UI 전체 갱신
+    /// </summary>
+    private void RefreshSummonUI()
+    {
+        // 화이트 기물 UI 삭제
+        foreach (Transform child in whiteSummonPieceParent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        // 블랙 기물 UI 삭제
+        foreach (Transform child in blackSummonPieceParent)
+        {
+            Destroy(child.gameObject);
+        }
+        
+        // 화이트 기물 UI 생성
         foreach (var pieceInfo in whiteSummonPieceInfos)
         {
             SummonPieceUI summonPiece = Instantiate(summonPiecePrefab, whiteSummonPieceParent);
             summonPiece.SetPieceInfo(pieceInfo, PieceColor.White);
         }
+        
+        // 블랙 기물 UI 생성
         foreach (var pieceInfo in blackSummonPieceInfos)
         {
             SummonPieceUI summonPiece = Instantiate(summonPiecePrefab, blackSummonPieceParent);
@@ -282,15 +301,15 @@ public class SummonManager : MonoSingleton<SummonManager>
             // 소환 모드에서 보드 클릭과 완전히 동일한 처리
             OnBoardClick(targetCell.Value);
             
-            // 소환 성공했다면 UI 삭제, 실패했다면 선택 상태 유지됨
+            // 소환 성공했다면 리스트에서 제거되어 UI가 자동 갱신됨, 실패했다면 선택 상태 유지됨
             if (!HasSelectedPiece)
             {
-                // 성공 시 UI 삭제
-                uiToProcess.DestroySelf();
+                // 성공 시: UI는 이미 갱신되어 사라졌으므로 별도 처리 불필요
+                Debug.Log("드래그 소환 성공 - UI 자동 갱신됨");
             }
             else
             {
-                // 실패 시 원래 위치로 복귀
+                // 실패 시: 원래 위치로 복귀
                 uiToProcess.ReturnToOriginalPosition();
             }
         }
@@ -317,8 +336,20 @@ public class SummonManager : MonoSingleton<SummonManager>
             return false;
         }
 
+        // 해당 기물이 소환 가능한 리스트에 있는지 확인
+        var targetList = pieceColor == PieceColor.White ? whiteSummonPieceInfos : blackSummonPieceInfos;
+        if (targetList == null || !targetList.Contains(pieceInfo))
+        {
+            Debug.LogWarning($"소환할 수 없는 기물입니다: {pieceInfo.pieceName} ({pieceColor})");
+            return false;
+        }
+
         // 현재 턴 플레이어의 기물인지 확인
-        if (!GameManager.Instance.IsPlayerTurn) return false;
+        // if (GameManager.Instance.CurrentTurn != pieceColor)
+        // {
+        //     Debug.LogWarning($"현재 턴 플레이어의 기물이 아닙니다. {pieceColor}");
+        //     return false;
+        // }
 
         // 유효성 검사
         if (!PieceManager.Instance.IsValidPlacementPosition(targetPosition))
@@ -334,11 +365,33 @@ public class SummonManager : MonoSingleton<SummonManager>
         bool success = PieceManager.Instance.DeployPiece(pieceInfo, targetPosition, pieceColor);
         if (success)
         {
+            // 소환 성공 시 리스트에서 기물 제거
+            RemovePieceFromSummonList(pieceInfo, pieceColor);
+            
             // 소환 완료 후 턴 전환
             GameManager.Instance.TryAdvanceTurn();
         }
         
         return success;
+    }
+    
+    /// <summary>
+    /// 소환 리스트에서 기물 제거 및 UI 갱신
+    /// </summary>
+    /// <param name="pieceInfo">제거할 기물</param>
+    /// <param name="pieceColor">기물 색상</param>
+    private void RemovePieceFromSummonList(PieceInfo pieceInfo, PieceColor pieceColor)
+    {
+        var targetList = pieceColor == PieceColor.White ? whiteSummonPieceInfos : blackSummonPieceInfos;
+        
+        if (targetList != null && targetList.Contains(pieceInfo))
+        {
+            targetList.Remove(pieceInfo);
+            Debug.Log($"소환 리스트에서 기물 제거: {pieceInfo.pieceName} ({pieceColor}), 남은 개수: {targetList.Count}");
+            
+            // UI 갱신
+            RefreshSummonUI();
+        }
     }
 
     /// <summary>
@@ -354,9 +407,6 @@ public class SummonManager : MonoSingleton<SummonManager>
             Debug.Log("선택된 기물이 없습니다.");
             return false;
         }
-
-        // 삭제할 UI 미리 저장
-        var uiToDestroy = selectedPieceUI;
         
         bool success = TrySummonPiece(selectedPieceInfo, targetPosition, selectedPieceColor);
         
@@ -365,33 +415,128 @@ public class SummonManager : MonoSingleton<SummonManager>
             // 성공 시 선택 해제 (하이라이트도 함께 제거됨)
             DeselectPieceForSummon();
             
-            // UI 직접 삭제
-            uiToDestroy.DestroySelf();
         }
 
         return success;
     }
 
-    void UpdateAIPocketPieces()
+    /// <summary>
+    /// 특정 색상의 기물을 기호로 찾습니다.
+    /// </summary>
+    /// <param name="pieceSymbol">기물 기호 (대소문자 구분 없음)</param>
+    /// <param name="pieceColor">찾을 기물 색상</param>
+    /// <returns>찾은 PieceInfo, 없으면 null</returns>
+    public PieceInfo FindPieceInfoBySymbol(char pieceSymbol, PieceColor pieceColor)
     {
-        aiStartPocketPieces = "";
+        char normalizedSymbol = char.ToLower(pieceSymbol);
+        
+        // 색상에 맞는 기물 리스트 선택
+        var targetPieces = pieceColor == PieceColor.White ? 
+            whiteSummonPieceInfos : 
+            blackSummonPieceInfos;
 
-        // 모든 기물 하나씩 추가
-        // foreach (var piece in customPieces)
-        // {
-        //     if (piece != null)
-        //     {
-        //         aiStartPocketPieces += piece.pieceAlphabet;
-        //     }
-        // }
-
-        // SummonManager의 흑 소환 기물로 초기화
-        foreach (var piece in blackSummonPieceInfos)
+        foreach (var pieceInfo in targetPieces)
         {
-            if (piece != null)
+            if (pieceInfo != null && char.ToLower(pieceInfo.pieceAlphabet) == normalizedSymbol)
             {
-                aiStartPocketPieces += piece.pieceAlphabet;
+                return pieceInfo;
             }
         }
+
+        Debug.LogError($"색상({pieceColor})에 맞는 기물 기호 '{pieceSymbol}'에 해당하는 PieceInfo를 찾을 수 없습니다.");
+        return null;
     }
+
+    #region AI 전용 메서드들
+
+    /// <summary>
+    /// 특정 기물 정보와 색상에 해당하는 SummonPieceUI를 찾습니다.
+    /// </summary>
+    /// <param name="pieceInfo">찾을 기물 정보</param>
+    /// <param name="color">기물 색상</param>
+    /// <returns>찾은 SummonPieceUI, 없으면 null</returns>
+    public SummonPieceUI FindSummonPieceUI(PieceInfo pieceInfo, PieceColor color)
+    {
+        Transform parentTransform = color == PieceColor.Black ? 
+            blackSummonPieceParent : whiteSummonPieceParent;
+        
+        if (parentTransform == null)
+        {
+            Debug.LogError($"해당 색상의 소환 UI 부모가 설정되지 않았습니다: {color}");
+            return null;
+        }
+
+        SummonPieceUI[] summonUIs = parentTransform.GetComponentsInChildren<SummonPieceUI>();
+        
+        foreach (var ui in summonUIs)
+        {
+            if (ui.PieceInfo == pieceInfo && ui.PieceColor == color)
+            {
+                return ui;
+            }
+        }
+        
+        return null;
+    }
+
+    /// <summary>
+    /// AI용 향상된 소환 메서드 (시각적 피드백 포함)
+    /// </summary>
+    /// <param name="pieceInfo">소환할 기물 정보</param>
+    /// <param name="targetPosition">목표 위치</param>
+    /// <param name="pieceColor">기물 색상</param>
+    public IEnumerator TrySummonPieceWithAIFeedback(PieceInfo pieceInfo, Vector2Int targetPosition, PieceColor pieceColor)
+    {
+        if (pieceInfo == null) 
+        {
+            Debug.LogWarning("소환할 기물 정보가 없습니다.");
+            yield break;
+        }
+
+        // AI 선택 과정 시각적 피드백
+        if (showAISelectionProcess)
+        {
+            SummonPieceUI targetUI = FindSummonPieceUI(pieceInfo, pieceColor);
+            if (targetUI != null)
+            {
+                // AI가 기물을 "고려"하는 시각적 피드백
+                targetUI.SetSelected(true);
+                yield return new WaitForSeconds(aiSelectionDuration);
+                targetUI.SetSelected(false);
+            }
+            
+            // 목표 위치 하이라이트
+            BoardManager.Instance.UpdateCellHighlight(targetPosition, pieceInfo, pieceColor);
+            yield return new WaitForSeconds(aiHighlightDuration);
+            BoardManager.Instance.ClearCellHighlight();
+        }
+
+        // 실제 소환 실행
+        bool success = TrySummonPiece(pieceInfo, targetPosition, pieceColor);
+        
+        // 결과 로깅
+        if (success)
+        {
+            Debug.Log($"AI 소환 성공: {pieceInfo.pieceName} → {targetPosition} ({pieceColor})");
+        }
+        else
+        {
+            Debug.LogError($"AI 소환 실패: {pieceInfo.pieceName} → {targetPosition} ({pieceColor})");
+        }
+    }
+
+    /// <summary>
+    /// AI용 간단한 소환 메서드 (시각적 피드백 없음)
+    /// </summary>
+    /// <param name="pieceInfo">소환할 기물 정보</param>
+    /// <param name="targetPosition">목표 위치</param>
+    /// <param name="pieceColor">기물 색상</param>
+    /// <returns>소환 성공 여부</returns>
+    public bool TrySummonPieceForAI(PieceInfo pieceInfo, Vector2Int targetPosition, PieceColor pieceColor)
+    {
+        // 기본 소환 로직에서 리스트 제거와 UI 갱신이 모두 처리됨
+        return TrySummonPiece(pieceInfo, targetPosition, pieceColor);
+    }
+
+    #endregion
 }
