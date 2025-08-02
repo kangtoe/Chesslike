@@ -94,6 +94,11 @@ public class FairyStockfishIniGenerator : MonoBehaviour
         lines.Add("pieceDrops = true");      // 기물을 보드에 배치할 수 있음
         lines.Add("pocketSize = 8");         // 손에 가질 수 있는 기물 수 (각 종류당)
         
+        // 프로모션 비활성화
+        lines.Add("promotion = false");      // 프로모션 완전 비활성화
+        lines.Add("promotionValue = 0");     // 프로모션 가치를 0으로 설정 (AI가 프로모션을 고려하지 않음)
+        
+        
         lines.Add("");  // 빈 줄 추가
         
         // 커스텀 피스들 추가
