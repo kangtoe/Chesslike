@@ -62,7 +62,7 @@ public class StockfishConnector : MonoBehaviour
 
     #endregion stockfish utility
 
-    // FEN 문자열과 턴 정보를 받아 엔진의 다음 bestmove를 구하는 함수
+    // 완전한 FEN 문자열을 받아 엔진의 다음 bestmove를 구하는 함수
     public string GetBestMoveFromFEN(string fen, int depth = 10, PieceColor color = PieceColor.Black)
     {
         if(string.IsNullOrEmpty(fen))
@@ -71,19 +71,18 @@ public class StockfishConnector : MonoBehaviour
             return null;
         }
 
-        // FEN에서 턴 정보(w 또는 b)를 color에 맞게 교체
-        // FEN은 "... w - - 0 1" 또는 "... b - - 0 1" 형태여야 함
-        string colorStr = (color == PieceColor.White) ? "w" : "b";
-        fen += " " + colorStr + " - - 0 1";
+        // FEN이 완전한 형태인지 확인하고, 필요하면 턴 정보 수정
+        string processedFEN = ChessNotationUtil.ProcessFEN(fen, color);
 
-        SendCommand("position fen " + fen);
+        Debug.Log($"[Stockfish] Position FEN: {processedFEN}");
+        SendCommand("position fen " + processedFEN);
         SendCommand("go depth " + depth);
 
         string bestMove = null;
         string line;
         while ((line = stockfishOutput.ReadLine()) != null)
         {
-            //Debug.Log("[Recv] " + line);
+            Debug.Log($"[Recv] {line}");
             if (line.StartsWith("bestmove"))
             {
                 var parts = line.Split(' ');
@@ -92,6 +91,10 @@ public class StockfishConnector : MonoBehaviour
                 break;
             }
         }
+        
+        Debug.Log($"[Stockfish] Best move: {bestMove}");
         return bestMove;
     }
+
+
 }

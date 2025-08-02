@@ -36,6 +36,62 @@ public static class ChessNotationUtil
         
         return true;
     }
+
+    /// <summary>
+    /// 소환 명령어인지 확인합니다. 예: "P@e4"
+    /// </summary>
+    /// <param name="moveNotation">명령어 문자열</param>
+    /// <returns>소환 명령어 여부</returns>
+    public static bool IsSummonNotation(string moveNotation)
+    {
+        return !string.IsNullOrEmpty(moveNotation) && moveNotation.Contains("@");
+    }
+
+    /// <summary>
+    /// 소환 표기법(예: "P@e4")을 파싱합니다.
+    /// </summary>
+    /// <param name="summonNotation">소환 표기법 (예: "P@e4")</param>
+    /// <param name="pieceSymbol">기물 기호</param>
+    /// <param name="targetCoord">목표 좌표</param>
+    /// <returns>파싱 성공 여부</returns>
+    public static bool TryParseSummonNotation(string summonNotation, out char pieceSymbol, out Vector2Int targetCoord)
+    {
+        pieceSymbol = '\0';
+        targetCoord = Vector2Int.zero;
+
+        if (string.IsNullOrEmpty(summonNotation) || !summonNotation.Contains("@"))
+        {
+            Debug.LogError($"잘못된 소환 표기법: {summonNotation}");
+            return false;
+        }
+
+        // "@"로 분리
+        string[] parts = summonNotation.Split('@');
+        if (parts.Length != 2)
+        {
+            Debug.LogError($"잘못된 소환 표기법 형식: {summonNotation}");
+            return false;
+        }
+
+        // 기물 기호 추출
+        string pieceStr = parts[0].Trim();
+        if (pieceStr.Length != 1)
+        {
+            Debug.LogError($"잘못된 기물 기호: {pieceStr}");
+            return false;
+        }
+        pieceSymbol = pieceStr[0];
+
+        // 목표 위치 파싱
+        string targetNotation = parts[1].Trim();
+        if (!TryParseSquareNotation(targetNotation, out targetCoord))
+        {
+            Debug.LogError($"잘못된 소환 위치: {targetNotation}");
+            return false;
+        }
+
+        return true;
+    }
     
     /// <summary>
     /// 단일 체스 칸 표기법(예: "e2")을 Vector2Int로 변환합니다.
@@ -94,13 +150,20 @@ public static class ChessNotationUtil
         
         return $"{file}{rank}";
     }
-    
+
+
     /// <summary>
-    /// 현재 배치된 피스들로부터 FEN 문자열을 생성합니다.
+    /// 현재 배치된 피스들로부터 완전한 FEN 문자열을 생성합니다. (포켓 피스 포함)
     /// </summary>
-    /// <returns>FEN 문자열</returns>
-    public static string GenerateFEN()
+    /// <param name="activeColor">현재 턴 색상</param>
+    /// <returns>완전한 FEN 문자열</returns>
+    public static string GenerateFEN(PieceColor? activeColor = null )
     {
+        if (activeColor == null)
+        {
+            activeColor = GameManager.Instance.CurrentTurn;
+        }
+
         Dictionary<Vector2Int, DeployedPiece> deployedPieces = PieceManager.Instance.DeployedPieces;
         int boardWidth = BoardManager.Instance.BoardWidth;
         int boardHeight = BoardManager.Instance.BoardHeight;
@@ -113,6 +176,7 @@ public static class ChessNotationUtil
         
         System.Text.StringBuilder fen = new System.Text.StringBuilder();
 
+        // 보드 상태 생성
         for (int y = boardHeight - 1; y >= 0; y--) // FEN은 8(위)~1(아래) 순서
         {
             int emptyCount = 0;
@@ -140,9 +204,93 @@ public static class ChessNotationUtil
             if (y > 0)
                 fen.Append('/');
         }
-        return fen.ToString();
+
+        // 포켓 피스 정보 추가 (크레이지하우스 형식)
+        string pocketPieces = GeneratePocketPiecesString();
+        if (!string.IsNullOrEmpty(pocketPieces))
+        {
+            fen.Append($"[{pocketPieces}]");
+        }
+
+        // ProcessFEN을 사용하여 턴 정보와 기본값 추가
+        string incompleteFen = fen.ToString(); // 보드 + 포켓 피스까지만
+        return ProcessFEN(incompleteFen, activeColor.Value);
     }
 
+    /// <summary>
+    /// 소환 가능한 기물들을 포켓 피스 문자열로 변환합니다.
+    /// </summary>
+    /// <returns>포켓 피스 문자열 (예: "QRBNqrbn")</returns>
+    public static string GeneratePocketPiecesString()
+    {
+        var summonManager = SummonManager.Instance;
+        if (summonManager == null)
+        {
+            Debug.LogWarning("SummonManager를 찾을 수 없습니다.");
+            return "";
+        }
+
+        System.Text.StringBuilder pocketPieces = new System.Text.StringBuilder();
+
+        // 백색 기물들 추가 (대문자)
+        foreach (var pieceInfo in summonManager.WhiteSummonPieceInfos)
+        {
+            if (pieceInfo != null)
+            {
+                pocketPieces.Append(char.ToUpper(pieceInfo.pieceAlphabet));
+            }
+        }
+
+        // 흑색 기물들 추가 (소문자)
+        foreach (var pieceInfo in summonManager.BlackSummonPieceInfos)
+        {
+            if (pieceInfo != null)
+            {
+                pocketPieces.Append(char.ToLower(pieceInfo.pieceAlphabet));
+            }
+        }
+
+        Debug.Log($"pocketPieces: {pocketPieces.ToString()}");
+
+        return pocketPieces.ToString();
+    }
+
+    /// <summary>
+    /// FEN 문자열을 처리하여 올바른 턴 정보로 수정합니다.
+    /// </summary>
+    /// <param name="fen">원본 FEN</param>
+    /// <param name="activeColor">현재 턴 색상</param>
+    /// <returns>처리된 FEN</returns>
+    public static string ProcessFEN(string fen, PieceColor activeColor)
+    {
+        if (string.IsNullOrEmpty(fen))
+        {
+            return "";
+        }
+
+        string colorStr = (activeColor == PieceColor.White) ? "w" : "b";
+        
+        // FEN이 완전한 형태인지 확인 (공백이 있으면 완전한 형태)
+        if (fen.Contains(" "))
+        {
+            // 완전한 FEN - 턴 정보만 교체
+            string[] parts = fen.Split(' ');
+            if (parts.Length >= 2)
+            {
+                parts[1] = colorStr; // 턴 정보 교체
+                return string.Join(" ", parts);
+            }
+            else if (parts.Length == 1)
+            {
+                // 보드 상태만 있는 경우 - 나머지 정보 추가
+                return parts[0] + " " + colorStr + " - - 0 1";
+            }
+        }
+        
+        // 불완전한 FEN (보드 상태만) - 턴 정보 추가
+        return fen + " " + colorStr + " - - 0 1";
+    }
+    
     /// <summary>
     /// 특정 움직임 적용 후 FEN을 생성합니다 (간단한 기물 이동만 처리)
     /// </summary>
@@ -182,8 +330,8 @@ public static class ChessNotationUtil
             // 새로운 보드 상태를 FEN으로 변환
             string newBoardState = BoardToFEN(board);
 
-            // 턴 변경
-            string newActiveColor = currentPlayer == PieceColor.White ? "b" : "w";
+            // 턴 변경 (현재 플레이어의 반대 턴)
+            PieceColor nextTurn = currentPlayer == PieceColor.White ? PieceColor.Black : PieceColor.White;
 
             // 나머지 FEN 요소들은 간단하게 처리
             string castling = fenParts.Length > 2 ? fenParts[2] : "KQkq";
@@ -191,8 +339,9 @@ public static class ChessNotationUtil
             string halfmove = fenParts.Length > 4 ? fenParts[4] : "0";
             string fullmove = fenParts.Length > 5 ? fenParts[5] : "1";
 
-            // 새 FEN 생성
-            return $"{newBoardState} {newActiveColor} {castling} {enPassant} {halfmove} {fullmove}";
+            // 기본 FEN 구성 후 ProcessFEN으로 턴 정보 적용
+            string baseFen = $"{newBoardState} w {castling} {enPassant} {halfmove} {fullmove}";
+            return ProcessFEN(baseFen, nextTurn);
         }
         catch (System.Exception e)
         {

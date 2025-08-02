@@ -73,8 +73,7 @@ public class GameStateValidator : MonoSingleton<GameStateValidator>
         }
 
         // 스톡피시로부터 직접 bestmove 획득
-        string colorStr = (currentPlayer == PieceColor.White) ? "w" : "b";
-        string fullFen = fen + " " + colorStr + " - - 0 1";
+        string fullFen = ChessNotationUtil.ProcessFEN(fen, currentPlayer);
         string bestMove = StockfishConnector.GetBestMoveFromFEN(fullFen, 1, currentPlayer);
 
         // bestmove 결과로 합법적 움직임 존재 여부 판단
