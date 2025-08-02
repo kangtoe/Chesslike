@@ -94,13 +94,6 @@ public class FairyStockfishIniGenerator : MonoBehaviour
         lines.Add("pieceDrops = true");      // 기물을 보드에 배치할 수 있음
         lines.Add("pocketSize = 8");         // 손에 가질 수 있는 기물 수 (각 종류당)
         
-        // 시작 FEN 설정
-        // 크레이지 하우스: 손에 있는 기물을 빈 칸에 배치(드롭/소환) 가능
-        // 킹만 보드에 배치 (게임 종료 조건 유지)
-        string boardState = "8/8/8/8/8/8/8/8";
-        string pocketPieces = SummonManager.Instance.AiStartPocketPieces;        
-        lines.Add($"startFen = {boardState}[{pocketPieces}] w - - 0 1");        
-        
         lines.Add("");  // 빈 줄 추가
         
         // 커스텀 피스들 추가
