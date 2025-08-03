@@ -361,15 +361,15 @@ public class SummonManager : MonoSingleton<SummonManager>
         // 추가 소환 제한 로직이 있다면 여기에 구현
         // 예: 자원 소모, 쿨다운, 최대 소환 수 제한 등
 
-        // 기물 배치
-        bool success = PieceManager.Instance.DeployPiece(pieceInfo, targetPosition, pieceColor);
+        // 기물 배치 (애니메이션 포함)
+        bool success = PieceManager.Instance.DeployPieceAnimated(pieceInfo, targetPosition, pieceColor);
         if (success)
         {
             // 소환 성공 시 리스트에서 기물 제거
             RemovePieceFromSummonList(pieceInfo, pieceColor);
             
-            // 소환 완료 후 턴 전환
-            GameManager.Instance.TryAdvanceTurn();
+            // 소환 완료 후 턴 전환 (애니메이션 완료 후 호출되도록 코루틴 사용)
+            StartCoroutine(WaitForSummonAnimationAndAdvanceTurn());
         }
         
         return success;
@@ -539,4 +539,16 @@ public class SummonManager : MonoSingleton<SummonManager>
     }
 
     #endregion
+
+    /// <summary>
+    /// 소환 애니메이션 완료를 기다린 후 턴을 전환합니다
+    /// </summary>
+    IEnumerator WaitForSummonAnimationAndAdvanceTurn()
+    {
+        // PieceManager의 애니메이션이 완료될 때까지 대기
+        yield return new WaitUntil(() => !PieceManager.Instance.IsMoving);
+        
+        // 애니메이션 완료 후 턴 전환
+        GameManager.Instance.TryAdvanceTurn();
+    }
 }

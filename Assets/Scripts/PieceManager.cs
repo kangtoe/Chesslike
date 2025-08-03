@@ -21,6 +21,13 @@ public class PieceManager : MonoSingleton<PieceManager>
     [SerializeField] float minMoveTime = 0.3f; // 최소 이동 시간
     [SerializeField] float dropTime = 0.1f; // 내려치기 시간 (고정)
     
+    [Header("소환 연출")]
+    [SerializeField] float summonStartHeight = 3f; // 소환 시작 높이 배수
+    [SerializeField] float summonHoverHeight = 0.2f; // 소환 중간 멈춤 높이 배수
+    [SerializeField] float summonDescendTime = 0.4f; // 소환 하강 시간
+    [SerializeField] float summonPauseTime = 0.25f; // 소환 에너지 집중 시간
+    [SerializeField] float summonDropTime = 0.08f; // 소환 내려찍기 시간 (더 빠르게)
+    
     [NaughtyAttributes.ReadOnly]
     [SerializeField] bool _isMoving = false;
     public bool IsMoving => _isMoving;    
@@ -107,6 +114,7 @@ public class PieceManager : MonoSingleton<PieceManager>
             return false;
         }
 
+        // 연출 없이 즉시 배치 (기존 동작 유지)
         BoardCell cell = BoardManager.Instance.GetCell(cellCoordinate);
         DeployedPiece piece = Instantiate(_piecePrefab, _pieceRoot.transform);
         piece.transform.position = cell.PieceDeployPoint;
@@ -118,6 +126,78 @@ public class PieceManager : MonoSingleton<PieceManager>
 
         Debug.Log($"피스가 좌표 {cellCoordinate}에 배치되었습니다: {pieceInfo.name}");
         return true;
+    }
+
+    /// <summary>
+    /// 애니메이션과 함께 기물을 소환 배치합니다 (소환용)
+    /// </summary>
+    public bool DeployPieceAnimated(PieceInfo pieceInfo, Vector2Int cellCoordinate, PieceColor pieceColor)
+    {
+        if(pieceInfo == null)
+        {
+            Debug.LogWarning("PieceInfo is null");
+            return false;
+        }
+
+        if(!IsValidPlacementPosition(cellCoordinate))
+        {
+            Debug.LogWarning($"Invalid cell coordinate: {cellCoordinate}");
+            return false;
+        }
+
+        if(_isMoving) return false; // 다른 애니메이션이 진행 중이면 불가
+
+        StartCoroutine(DeployPieceAnimatedCoroutine(pieceInfo, cellCoordinate, pieceColor));
+        return true;
+    }
+
+    /// <summary>
+    /// 소환 연출: 높은 곳에서 등장하여 내려찍기
+    /// </summary>
+    IEnumerator DeployPieceAnimatedCoroutine(PieceInfo pieceInfo, Vector2Int cellCoordinate, PieceColor pieceColor)
+    {
+        _isMoving = true;
+
+        BoardCell cell = BoardManager.Instance.GetCell(cellCoordinate);
+        DeployedPiece piece = Instantiate(_piecePrefab, _pieceRoot.transform);
+        
+        // 기물 초기화
+        piece.InitPiece(pieceInfo, pieceColor);
+        piece.SetCellCoordinate(cellCoordinate);
+
+        // 시작 위치: 목표 위치 위 높은 곳
+        Vector3 endPos = cell.PieceDeployPoint;
+        Vector3 startPos = endPos + Vector3.back * (liftHeight * summonStartHeight); // 소환 전용 높이
+        piece.transform.position = startPos;
+
+        // 중간 지점: 목표 위 약간 높은 곳 (잠깐 멈춤용)
+        Vector3 midPos = endPos + Vector3.back * (liftHeight * summonHoverHeight);
+
+        // 1단계: 중간 지점까지 부드럽게 하강 (마법적인 느낌)
+        bool firstPhaseDone = false;
+        LeanTween.move(piece.gameObject, midPos, summonDescendTime)
+            .setEase(LeanTweenType.easeOutCubic) // 더 부드러운 이징
+            .setOnComplete(() => firstPhaseDone = true);
+            
+        yield return new WaitUntil(() => firstPhaseDone);
+        
+        // 2단계: 잠깐 멈춤 (소환 에너지 집중, 더 길게)
+        yield return new WaitForSeconds(summonPauseTime);
+        
+        // 3단계: 매우 빠르게 내려찍기! (임팩트!)
+        bool dropDone = false;
+        LeanTween.move(piece.gameObject, endPos, summonDropTime)
+            .setEase(LeanTweenType.easeInCubic) // 더 강한 가속
+            .setOnComplete(() => dropDone = true);
+            
+        yield return new WaitUntil(() => dropDone);
+
+        // 딕셔너리에 추가
+        deployedPieces[cellCoordinate] = piece;
+        
+        _isMoving = false;
+        
+        Debug.Log($"피스가 연출과 함께 좌표 {cellCoordinate}에 소환되었습니다: {pieceInfo.name}");
     }
 
     public bool MovePiece(Vector2Int toCoordinate)
