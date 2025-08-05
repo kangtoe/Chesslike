@@ -82,7 +82,12 @@ public class StockfishConnector : MonoBehaviour
         string line;
         while ((line = stockfishOutput.ReadLine()) != null)
         {
-            Debug.Log($"[Recv] {line}");
+            // depth가 10인 라인만 디버깅 로그에 남기기
+            if (line.StartsWith("info depth 10"))
+            {
+                Debug.Log($"[Recv] {line}");
+            }
+            
             if (line.StartsWith("bestmove"))
             {
                 var parts = line.Split(' ');
